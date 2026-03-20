@@ -7,6 +7,7 @@ import type { Topology, GeometryCollection } from "topojson-specification";
 import type { Feature, Geometry } from "geojson";
 import {
   ISO_NUM_TO_KEY,
+  ISO_NUM_TO_FLAG_CODE,
   EUROPE_ISOS,
   AMERICAS_ISOS,
 } from "@/lib/geo/country-mapping";
@@ -16,8 +17,11 @@ type Continent = "europe" | "americas";
 interface CountryFeature {
   key: string;
   iso: string;
+  flagCode: string;
   path: string;
-  centroid: [number, number]; // in viewBox coordinates
+  centroid: [number, number];
+  pathBoundsWidth: number;
+  pathBoundsHeight: number;
 }
 
 interface RetroMapProps {
@@ -46,6 +50,12 @@ function getProjection(cont: Continent): d3.GeoProjection {
 
 function getContinentIsos(cont: Continent): Set<string> {
   return cont === "europe" ? EUROPE_ISOS : AMERICAS_ISOS;
+}
+
+/** Pick flag image resolution based on rendered size */
+function flagUrl(code: string, boundsMax: number): string {
+  const size = boundsMax > 200 ? 160 : boundsMax > 100 ? 80 : 40;
+  return `https://flagcdn.com/w${size}/${code}.png`;
 }
 
 export default function RetroMap({
@@ -108,6 +118,18 @@ export default function RetroMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [continent]);
 
+  // Preload flag images for current continent
+  useEffect(() => {
+    const isos = getContinentIsos(continent);
+    isos.forEach((iso) => {
+      const code = ISO_NUM_TO_FLAG_CODE[iso];
+      if (code) {
+        const img = new Image();
+        img.src = `https://flagcdn.com/w160/${code}.png`;
+      }
+    });
+  }, [continent]);
+
   const processFeatures = useCallback(
     (world: Topology, cont: Continent) => {
       const isos = getContinentIsos(cont);
@@ -126,13 +148,25 @@ export default function RetroMap({
         if (!isos.has(isoNum)) continue;
 
         const key = ISO_NUM_TO_KEY[isoNum];
-        if (!key) continue;
+        const flagCode = ISO_NUM_TO_FLAG_CODE[isoNum];
+        if (!key || !flagCode) continue;
 
         const path = pathGenerator(feature);
         const centroid = pathGenerator.centroid(feature);
+        const bounds = pathGenerator.bounds(feature);
 
         if (path && centroid && isFinite(centroid[0]) && isFinite(centroid[1])) {
-          features.push({ key, iso: isoNum, path, centroid });
+          const bw = bounds[1][0] - bounds[0][0];
+          const bh = bounds[1][1] - bounds[0][1];
+          features.push({
+            key,
+            iso: isoNum,
+            flagCode,
+            path,
+            centroid,
+            pathBoundsWidth: bw,
+            pathBoundsHeight: bh,
+          });
         }
       }
 
@@ -147,7 +181,6 @@ export default function RetroMap({
     [clubCountryIds]
   );
 
-  // Convert viewBox coordinates to pixel position within the container
   const viewBoxToPixel = useCallback(
     (vx: number, vy: number): { left: number; top: number } | null => {
       if (!svgRect) return null;
@@ -184,24 +217,54 @@ export default function RetroMap({
           style={{ backgroundColor: "#7CA8C4", display: "block" }}
           aria-label={`Mapa de ${continent === "europe" ? "EUROPA" : "AMÉRICAS"}`}
         >
+          {/* Pattern definitions for flag fills */}
+          <defs>
+            {countryFeatures.map((cf) => (
+              <pattern
+                key={`pat-${cf.iso}`}
+                id={`flag-${cf.iso}`}
+                patternUnits="objectBoundingBox"
+                width="1"
+                height="1"
+                patternContentUnits="objectBoundingBox"
+              >
+                <image
+                  href={flagUrl(cf.flagCode, Math.max(cf.pathBoundsWidth, cf.pathBoundsHeight))}
+                  width="1"
+                  height="1"
+                  preserveAspectRatio="xMidYMid slice"
+                />
+              </pattern>
+            ))}
+          </defs>
+
+          {/* Country paths with flag pattern fills */}
           {countryFeatures.map((cf) => {
             const hasClubs = countriesWithClubs.has(cf.key);
             const isSelected = cf.key === selectedCountry;
             const isHovered = cf.key === hoveredId;
 
-            let fill = "#D4CC98";
-            if (isSelected) fill = "#FFE870";
-            else if (isHovered && hasClubs) fill = "#E0D890";
+            let fill: string;
+            if (isSelected) {
+              fill = "#FFE870"; // Gold override for selected
+            } else {
+              fill = `url(#flag-${cf.iso})`;
+            }
 
             return (
               <path
                 key={cf.key}
                 d={cf.path}
                 fill={fill}
-                stroke={isSelected ? "#8A6A10" : "#7A7A60"}
-                strokeWidth={isSelected ? 1.8 : 0.6}
+                stroke={isSelected ? "#8A6A10" : "#555"}
+                strokeWidth={isSelected ? 1.8 : isHovered && hasClubs ? 1 : hasClubs ? 0.6 : 0.4}
                 strokeLinejoin="round"
-                style={{ cursor: hasClubs ? "pointer" : "default" }}
+                style={{
+                  cursor: hasClubs ? "pointer" : "default",
+                  transition: "stroke-width 0.15s, opacity 0.15s",
+                  opacity: isSelected ? 1 : isHovered ? 1 : hasClubs ? 0.85 : 1,
+                  filter: hasClubs ? "none" : "saturate(0.3) brightness(1.1)",
+                }}
                 onMouseEnter={() => hasClubs && setHoveredId(cf.key)}
                 onMouseLeave={() => setHoveredId(null)}
                 onPointerDown={() => hasClubs && onSelectCountry(cf.key)}
@@ -217,9 +280,23 @@ export default function RetroMap({
               />
             );
           })}
+
+          {/* Hover brightness overlay */}
+          {hoveredId && hoveredId !== selectedCountry && (() => {
+            const hovered = countryFeatures.find((cf) => cf.key === hoveredId);
+            if (!hovered || !countriesWithClubs.has(hovered.key)) return null;
+            return (
+              <path
+                d={hovered.path}
+                fill="rgba(255, 255, 255, 0.2)"
+                stroke="none"
+                style={{ pointerEvents: "none" }}
+              />
+            );
+          })()}
         </svg>
 
-        {/* Flag badges as HTML overlays — positioned using measured SVG dimensions */}
+        {/* Flag badges as HTML overlays */}
         {svgRect && countryFeatures
           .filter((cf) => countriesWithClubs.has(cf.key))
           .map((cf) => {
@@ -248,24 +325,26 @@ export default function RetroMap({
               >
                 <div
                   style={{
-                    width: 32,
-                    height: 24,
-                    backgroundColor: isSelected ? "#1a1a2e" : "#ffffff",
-                    border: `${isSelected ? 2 : 1.5}px solid ${isSelected ? "#D4A843" : "#555"}`,
+                    backgroundColor: isSelected ? "#1a1a2e" : "#fff",
+                    border: isSelected ? "2px solid #D4A843" : "1.5px solid #555",
                     borderRadius: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 16,
-                    lineHeight: 1,
-                    fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','Twemoji Mozilla',sans-serif",
+                    padding: 2,
                     boxShadow: isSelected
                       ? "0 0 10px rgba(212,168,67,0.7)"
                       : "0 1px 3px rgba(0,0,0,0.35)",
-                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  {info.flag}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://flagcdn.com/w40/${cf.flagCode}.png`}
+                    alt={info.name}
+                    width={22}
+                    height={15}
+                    style={{ display: "block" }}
+                  />
                 </div>
               </div>
             );

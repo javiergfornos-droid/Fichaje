@@ -68,6 +68,28 @@ export const ISO_NUM_TO_KEY: Record<string, string> = {
   "340": "honduras",
 };
 
+/**
+ * Maps ISO 3166-1 numeric codes to flagcdn.com alpha-2 codes (lowercase).
+ * Used for loading flag images: https://flagcdn.com/w160/{code}.png
+ *
+ * Note: England (826) uses "gb" since flagcdn uses sovereign state codes.
+ */
+export const ISO_NUM_TO_FLAG_CODE: Record<string, string> = {
+  // Europe
+  "620": "pt", "724": "es", "250": "fr", "826": "gb", "056": "be",
+  "528": "nl", "276": "de", "208": "dk", "578": "no", "752": "se",
+  "246": "fi", "380": "it", "756": "ch", "040": "at", "203": "cz",
+  "703": "sk", "616": "pl", "191": "hr", "688": "rs", "642": "ro",
+  "804": "ua", "643": "ru", "792": "tr",
+  "372": "ie", "348": "hu", "100": "bg", "300": "gr", "070": "ba",
+  "705": "si", "112": "by", "440": "lt", "428": "lv", "233": "ee",
+  // Americas
+  "840": "us", "484": "mx", "170": "co", "604": "pe", "076": "br",
+  "152": "cl", "600": "py", "858": "uy", "032": "ar",
+  "862": "ve", "218": "ec", "068": "bo", "124": "ca", "591": "pa",
+  "188": "cr", "320": "gt", "340": "hn",
+};
+
 /** Countries assigned to the Europe map tab */
 export const EUROPE_ISOS = new Set([
   "620","724","250","826","056","528","276","208","578","752","246",
