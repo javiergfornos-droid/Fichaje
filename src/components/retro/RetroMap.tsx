@@ -224,19 +224,21 @@ export default function RetroMap({
               >
                 <div
                   style={{
-                    width: 28,
-                    height: 20,
+                    width: 32,
+                    height: 24,
                     backgroundColor: isSelected ? "#1a1a2e" : "#ffffff",
                     border: `${isSelected ? 2 : 1.5}px solid ${isSelected ? "#D4A843" : "#555"}`,
                     borderRadius: 2,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 13,
+                    fontSize: 16,
                     lineHeight: 1,
+                    fontFamily: "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','Twemoji Mozilla',sans-serif",
                     boxShadow: isSelected
                       ? "0 0 10px rgba(212,168,67,0.7)"
                       : "0 1px 3px rgba(0,0,0,0.35)",
+                    overflow: "hidden",
                   }}
                 >
                   {info.flag}
