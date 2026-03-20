@@ -5,7 +5,6 @@ import * as d3 from "d3";
 import * as topojson from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import type { Feature, Geometry } from "geojson";
-import RetroBtn from "./RetroBtn";
 import {
   ISO_NUM_TO_KEY,
   EUROPE_ISOS,
@@ -15,52 +14,39 @@ import {
 type Continent = "europe" | "americas";
 
 interface CountryFeature {
-  key: string;       // our internal ID e.g. "spain"
-  iso: string;       // ISO numeric string e.g. "724"
-  path: string;      // SVG path string from D3
-  centroid: [number, number]; // pixel coordinates for flag badge
+  key: string;
+  iso: string;
+  path: string;
+  centroid: [number, number]; // in viewBox coordinates
 }
 
 interface RetroMapProps {
   continent: Continent;
   selectedCountry: string | null;
   onSelectCountry: (id: string) => void;
-  /** Country IDs that have clubs — only these are interactive */
   clubCountryIds: string[];
-  /** Country info keyed by id for flag display */
   countryInfo: Record<string, { flag: string; name: string }>;
 }
 
 const SVG_WIDTH = 800;
 const SVG_HEIGHT = 550;
 
-const CONTINENT_CONFIG: Record<
-  Continent,
-  {
-    label: string;
-    isos: Set<string>;
-    projection: () => d3.GeoProjection;
+function getProjection(cont: Continent): d3.GeoProjection {
+  if (cont === "europe") {
+    return d3.geoMercator()
+      .center([15, 54])
+      .scale(500)
+      .translate([SVG_WIDTH / 2, SVG_HEIGHT / 2]);
   }
-> = {
-  europe: {
-    label: "EUROPA",
-    isos: EUROPE_ISOS,
-    projection: () =>
-      d3.geoMercator()
-        .center([15, 54])
-        .scale(500)
-        .translate([SVG_WIDTH / 2, SVG_HEIGHT / 2]),
-  },
-  americas: {
-    label: "AMÉRICAS",
-    isos: AMERICAS_ISOS,
-    projection: () =>
-      d3.geoMercator()
-        .center([-60, -15])
-        .scale(280)
-        .translate([SVG_WIDTH / 2 + 30, SVG_HEIGHT / 2]),
-  },
-};
+  return d3.geoMercator()
+    .center([-60, -15])
+    .scale(280)
+    .translate([SVG_WIDTH / 2 + 30, SVG_HEIGHT / 2]);
+}
+
+function getContinentIsos(cont: Continent): Set<string> {
+  return cont === "europe" ? EUROPE_ISOS : AMERICAS_ISOS;
+}
 
 export default function RetroMap({
   continent,
@@ -73,27 +59,48 @@ export default function RetroMap({
   const [countryFeatures, setCountryFeatures] = useState<CountryFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const worldDataRef = useRef<Topology | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [svgRect, setSvgRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+
+  // Measure the SVG's actual rendered position within the container
+  useEffect(() => {
+    function measure() {
+      const svgEl = svgRef.current;
+      const containerEl = containerRef.current;
+      if (!svgEl || !containerEl) return;
+      const containerRect = containerEl.getBoundingClientRect();
+      const svgBBox = svgEl.getBoundingClientRect();
+      setSvgRect({
+        left: svgBBox.left - containerRect.left,
+        top: svgBBox.top - containerRect.top,
+        width: svgBBox.width,
+        height: svgBBox.height,
+      });
+    }
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [loading, continent]);
 
   // Load TopoJSON data once
   useEffect(() => {
     let cancelled = false;
-    async function loadWorld() {
-      if (worldDataRef.current) return worldDataRef.current;
-      const response = await fetch("/countries-110m.json");
-      const data = (await response.json()) as Topology;
-      if (!cancelled) worldDataRef.current = data;
-      return data;
-    }
-    loadWorld().then((world) => {
-      if (!cancelled && world) {
-        processFeatures(world, continent);
+    (async () => {
+      if (!worldDataRef.current) {
+        const response = await fetch("/countries-110m.json");
+        const data = (await response.json()) as Topology;
+        if (cancelled) return;
+        worldDataRef.current = data;
       }
-    });
+      processFeatures(worldDataRef.current, continent);
+    })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reprocess when continent changes (but don't refetch)
+  // Reprocess when continent changes
   useEffect(() => {
     if (worldDataRef.current) {
       processFeatures(worldDataRef.current, continent);
@@ -103,8 +110,8 @@ export default function RetroMap({
 
   const processFeatures = useCallback(
     (world: Topology, cont: Continent) => {
-      const config = CONTINENT_CONFIG[cont];
-      const projection = config.projection();
+      const isos = getContinentIsos(cont);
+      const projection = getProjection(cont);
       const pathGenerator = d3.geoPath().projection(projection);
 
       const countriesGeo = topojson.feature(
@@ -116,7 +123,7 @@ export default function RetroMap({
 
       for (const feature of (countriesGeo as { type: "FeatureCollection"; features: Feature<Geometry>[] }).features) {
         const isoNum = String(feature.id);
-        if (!config.isos.has(isoNum)) continue;
+        if (!isos.has(isoNum)) continue;
 
         const key = ISO_NUM_TO_KEY[isoNum];
         if (!key) continue;
@@ -140,6 +147,18 @@ export default function RetroMap({
     [clubCountryIds]
   );
 
+  // Convert viewBox coordinates to pixel position within the container
+  const viewBoxToPixel = useCallback(
+    (vx: number, vy: number): { left: number; top: number } | null => {
+      if (!svgRect) return null;
+      return {
+        left: svgRect.left + (vx / SVG_WIDTH) * svgRect.width,
+        top: svgRect.top + (vy / SVG_HEIGHT) * svgRect.height,
+      };
+    },
+    [svgRect]
+  );
+
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center retro-panel-inset">
@@ -152,18 +171,19 @@ export default function RetroMap({
 
   return (
     <div className="h-full flex flex-col">
-      {/* SVG Map with HTML flag overlays */}
       <div
-        className="flex-1 retro-panel-inset p-1 overflow-hidden touch-manipulation"
-        style={{ position: "relative" }}
+        ref={containerRef}
+        className="flex-1 retro-panel-inset p-1 touch-manipulation"
+        style={{ position: "relative", overflow: "hidden" }}
       >
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
           className="w-full h-full"
-          style={{ backgroundColor: "#7CA8C4" }}
-          aria-label={`Mapa de ${CONTINENT_CONFIG[continent].label}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ backgroundColor: "#7CA8C4", display: "block" }}
+          aria-label={`Mapa de ${continent === "europe" ? "EUROPA" : "AMÉRICAS"}`}
         >
-          {/* Country paths */}
           {countryFeatures.map((cf) => {
             const hasClubs = countriesWithClubs.has(cf.key);
             const isSelected = cf.key === selectedCountry;
@@ -199,24 +219,28 @@ export default function RetroMap({
           })}
         </svg>
 
-        {/* Flag badges as HTML overlays — NEVER use SVG <text> for emoji flags */}
-        {countryFeatures
+        {/* Flag badges as HTML overlays — positioned using measured SVG dimensions */}
+        {svgRect && countryFeatures
           .filter((cf) => countriesWithClubs.has(cf.key))
           .map((cf) => {
             const isSelected = cf.key === selectedCountry;
             const info = countryInfo[cf.key];
             if (!info) return null;
 
+            const pos = viewBoxToPixel(cf.centroid[0], cf.centroid[1]);
+            if (!pos) return null;
+
             return (
               <div
                 key={`flag-${cf.key}`}
                 style={{
                   position: "absolute",
-                  left: `${(cf.centroid[0] / SVG_WIDTH) * 100}%`,
-                  top: `${(cf.centroid[1] / SVG_HEIGHT) * 100}%`,
+                  left: pos.left,
+                  top: pos.top,
                   transform: "translate(-50%, -50%)",
                   cursor: "pointer",
                   zIndex: isSelected ? 10 : 1,
+                  pointerEvents: "auto",
                 }}
                 onClick={() => onSelectCountry(cf.key)}
                 role="button"
