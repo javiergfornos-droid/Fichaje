@@ -1,5 +1,24 @@
 import type { Metadata } from "next";
+import { Oswald, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+const oswald = Oswald({
+  subsets: ["latin"],
+  variable: "--font-oswald",
+  display: "swap",
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  variable: "--font-source-serif",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "¡FICHAJE! — Camisetas de fútbol vintage originales",
@@ -8,9 +27,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Root layout providing base HTML structure.
- * Fonts are loaded via CSS @font-face with Google Fonts CDN links.
- * In production with Vercel, switch to next/font/google for self-hosting.
+ * Root layout providing fonts and base HTML structure.
  */
 export default function RootLayout({
   children,
@@ -18,15 +35,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Oswald:wght@400;500;600;700&family=Source+Serif+4:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="es"
+      className={`${oswald.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}
+    >
       <body className="antialiased">{children}</body>
     </html>
   );

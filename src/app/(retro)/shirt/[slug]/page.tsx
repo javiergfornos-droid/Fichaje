@@ -18,7 +18,8 @@ export default async function ShirtPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
   const shirt = DEMO_SHIRTS[slug];
 
   if (!shirt) {

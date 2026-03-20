@@ -39,7 +39,8 @@ export default async function RosterPage({
 }: {
   params: Promise<{ clubId: string }>;
 }) {
-  const { clubId } = await params;
+  const resolvedParams = await params;
+  const clubId = resolvedParams.clubId;
   const club = DEMO_CLUBS[clubId];
   const shirts = DEMO_SHIRTS[clubId] ?? [];
 
