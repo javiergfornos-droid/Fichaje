@@ -4,8 +4,7 @@ export interface Country {
   name: string;
   flag: string;
   continent: "europe" | "americas";
-  geo_points: [number, number][];
-  flag_center: [number, number];
+  iso_numeric: string;
   sort_order: number;
   created_at: string;
 }

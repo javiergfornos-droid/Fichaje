@@ -1,9 +1,24 @@
 import MapPageClient from "./MapPageClient";
-import { COUNTRIES } from "@/lib/geo/country-paths";
+import type { Country } from "@/types/country";
 
 export const metadata = {
   title: "¡FICHAJE! — Mapa de fichajes",
 };
+
+// Demo countries — in production this comes from Supabase
+const DEMO_COUNTRIES: Country[] = [
+  // Europe — countries with clubs
+  { id: "portugal", name: "PORTUGAL", flag: "🇵🇹", continent: "europe", iso_numeric: "620", sort_order: 0, created_at: "" },
+  { id: "spain", name: "ESPAÑA", flag: "🇪🇸", continent: "europe", iso_numeric: "724", sort_order: 1, created_at: "" },
+  { id: "france", name: "FRANCIA", flag: "🇫🇷", continent: "europe", iso_numeric: "250", sort_order: 2, created_at: "" },
+  { id: "england", name: "INGLATERRA", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", continent: "europe", iso_numeric: "826", sort_order: 3, created_at: "" },
+  { id: "netherlands", name: "PAÍSES BAJOS", flag: "🇳🇱", continent: "europe", iso_numeric: "528", sort_order: 4, created_at: "" },
+  { id: "germany", name: "ALEMANIA", flag: "🇩🇪", continent: "europe", iso_numeric: "276", sort_order: 5, created_at: "" },
+  { id: "italy", name: "ITALIA", flag: "🇮🇹", continent: "europe", iso_numeric: "380", sort_order: 6, created_at: "" },
+  // Americas — countries with clubs
+  { id: "argentina", name: "ARGENTINA", flag: "🇦🇷", continent: "americas", iso_numeric: "32", sort_order: 0, created_at: "" },
+  { id: "brazil", name: "BRASIL", flag: "🇧🇷", continent: "americas", iso_numeric: "76", sort_order: 1, created_at: "" },
+];
 
 // Demo clubs data — in production this comes from Supabase
 const DEMO_CLUBS = [
@@ -35,7 +50,7 @@ const DEMO_CLUBS = [
 export default function MapPage() {
   return (
     <MapPageClient
-      countries={COUNTRIES}
+      countries={DEMO_COUNTRIES}
       clubs={DEMO_CLUBS}
     />
   );

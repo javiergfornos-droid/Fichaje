@@ -1,14 +1,13 @@
 -- ¡FICHAJE! Database Schema
 -- Run this in Supabase SQL Editor to set up the database
 
--- Countries (static reference table)
+-- Countries (reference table — map shapes come from D3.js world-atlas, NOT this table)
 CREATE TABLE countries (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  flag TEXT NOT NULL,
-  continent TEXT NOT NULL,
-  geo_points JSONB NOT NULL,
-  flag_center JSONB NOT NULL,
+  id TEXT PRIMARY KEY,          -- 'spain', 'england', 'brazil'
+  name TEXT NOT NULL,           -- 'ESPAÑA', 'INGLATERRA', 'BRASIL'
+  flag TEXT NOT NULL,           -- '🇪🇸', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇧🇷'
+  continent TEXT NOT NULL,      -- 'europe' | 'americas'
+  iso_numeric TEXT NOT NULL,    -- '724', '826', '76' — maps to world-atlas feature IDs
   sort_order INT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );

@@ -1,211 +1,249 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import * as d3 from "d3";
+import * as topojson from "topojson-client";
+import type { Topology, GeometryCollection } from "topojson-specification";
+import type { Feature, Geometry } from "geojson";
 import RetroBtn from "./RetroBtn";
 import {
-  geoToSvgEurope,
-  geoToSvgAmericas,
-  geoPointsToSvgPath,
-} from "@/lib/geo/projections";
-import type { CountryGeoData } from "@/lib/geo/country-paths";
-
-interface RetroMapProps {
-  countries: CountryGeoData[];
-  selectedCountryId: string | null;
-  clubCountryIds: string[];
-  onSelectCountry: (id: string) => void;
-}
+  ISO_NUM_TO_KEY,
+  EUROPE_ISOS,
+  AMERICAS_ISOS,
+} from "@/lib/geo/country-mapping";
 
 type Continent = "europe" | "americas";
+
+interface CountryFeature {
+  key: string;       // our internal ID e.g. "spain"
+  iso: string;       // ISO numeric string e.g. "724"
+  path: string;      // SVG path string from D3
+  centroid: [number, number]; // pixel coordinates for flag badge
+}
+
+interface RetroMapProps {
+  continent: Continent;
+  selectedCountry: string | null;
+  onSelectCountry: (id: string) => void;
+  /** Country IDs that have clubs — only these are interactive */
+  clubCountryIds: string[];
+  /** Country info keyed by id for flag display */
+  countryInfo: Record<string, { flag: string; name: string }>;
+}
+
+const SVG_WIDTH = 800;
+const SVG_HEIGHT = 550;
 
 const CONTINENT_CONFIG: Record<
   Continent,
   {
     label: string;
-    viewBox: string;
-    projection: (lon: number, lat: number) => [number, number];
+    isos: Set<string>;
+    projection: () => d3.GeoProjection;
   }
 > = {
   europe: {
     label: "EUROPA",
-    viewBox: "0 0 700 500",
-    projection: geoToSvgEurope,
+    isos: EUROPE_ISOS,
+    projection: () =>
+      d3.geoMercator()
+        .center([15, 54])
+        .scale(500)
+        .translate([SVG_WIDTH / 2, SVG_HEIGHT / 2]),
   },
   americas: {
     label: "AMÉRICAS",
-    viewBox: "0 0 600 730",
-    projection: geoToSvgAmericas,
+    isos: AMERICAS_ISOS,
+    projection: () =>
+      d3.geoMercator()
+        .center([-60, -15])
+        .scale(280)
+        .translate([SVG_WIDTH / 2 + 30, SVG_HEIGHT / 2]),
   },
 };
 
-/**
- * Interactive SVG map with continent tabs — PC Fútbol retro style.
- */
 export default function RetroMap({
-  countries,
-  selectedCountryId,
-  clubCountryIds,
+  continent,
+  selectedCountry,
   onSelectCountry,
+  clubCountryIds,
+  countryInfo,
 }: RetroMapProps) {
-  const [continent, setContinent] = useState<Continent>("europe");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [countryFeatures, setCountryFeatures] = useState<CountryFeature[]>([]);
+  const [loading, setLoading] = useState(true);
+  const worldDataRef = useRef<Topology | null>(null);
 
-  const config = CONTINENT_CONFIG[continent];
-  const visibleCountries = useMemo(
-    () => countries.filter((c) => c.continent === continent),
-    [countries, continent],
+  // Load TopoJSON data once
+  useEffect(() => {
+    let cancelled = false;
+    async function loadWorld() {
+      if (worldDataRef.current) return worldDataRef.current;
+      const response = await fetch("/countries-110m.json");
+      const data = (await response.json()) as Topology;
+      if (!cancelled) worldDataRef.current = data;
+      return data;
+    }
+    loadWorld().then((world) => {
+      if (!cancelled && world) {
+        processFeatures(world, continent);
+      }
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reprocess when continent changes (but don't refetch)
+  useEffect(() => {
+    if (worldDataRef.current) {
+      processFeatures(worldDataRef.current, continent);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [continent]);
+
+  const processFeatures = useCallback(
+    (world: Topology, cont: Continent) => {
+      const config = CONTINENT_CONFIG[cont];
+      const projection = config.projection();
+      const pathGenerator = d3.geoPath().projection(projection);
+
+      const countriesGeo = topojson.feature(
+        world,
+        world.objects.countries as GeometryCollection
+      );
+
+      const features: CountryFeature[] = [];
+
+      for (const feature of (countriesGeo as { type: "FeatureCollection"; features: Feature<Geometry>[] }).features) {
+        const isoNum = String(feature.id);
+        if (!config.isos.has(isoNum)) continue;
+
+        const key = ISO_NUM_TO_KEY[isoNum];
+        if (!key) continue;
+
+        const path = pathGenerator(feature);
+        const centroid = pathGenerator.centroid(feature);
+
+        if (path && centroid && isFinite(centroid[0]) && isFinite(centroid[1])) {
+          features.push({ key, iso: isoNum, path, centroid });
+        }
+      }
+
+      setCountryFeatures(features);
+      setLoading(false);
+    },
+    []
   );
+
+  const countriesWithClubs = useMemo(
+    () => new Set(clubCountryIds),
+    [clubCountryIds]
+  );
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center retro-panel-inset">
+        <p className="text-[#D4CC98] font-mono text-sm animate-pulse">
+          Cargando mapa...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
-      {/* Continent tabs */}
-      <div className="flex gap-2 mb-3">
-        {(["europe", "americas"] as Continent[]).map((c) => (
-          <RetroBtn
-            key={c}
-            size="sm"
-            variant={continent === c ? "gold" : "default"}
-            onClick={() => setContinent(c)}
-          >
-            {CONTINENT_CONFIG[c].label}
-          </RetroBtn>
-        ))}
-      </div>
-
-      {/* SVG Map */}
-      <div className="flex-1 retro-panel-inset p-1 overflow-hidden touch-manipulation">
+      {/* SVG Map with HTML flag overlays */}
+      <div
+        className="flex-1 retro-panel-inset p-1 overflow-hidden touch-manipulation"
+        style={{ position: "relative" }}
+      >
         <svg
-          viewBox={config.viewBox}
+          viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
           className="w-full h-full"
           style={{ backgroundColor: "#7CA8C4" }}
-          aria-label={`Mapa de ${config.label}`}
+          aria-label={`Mapa de ${CONTINENT_CONFIG[continent].label}`}
         >
-          {/* SVG filter for pulsing gold glow on selected badge */}
-          <defs>
-            <filter id="gold-glow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-              <feFlood floodColor="#D4A843" floodOpacity="0.8" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Country polygons */}
-          {visibleCountries.map((country) => {
-            const hasClubs = clubCountryIds.includes(country.id);
-            const isSelected = country.id === selectedCountryId;
-            const isHovered = country.id === hoveredId;
+          {/* Country paths */}
+          {countryFeatures.map((cf) => {
+            const hasClubs = countriesWithClubs.has(cf.key);
+            const isSelected = cf.key === selectedCountry;
+            const isHovered = cf.key === hoveredId;
 
             let fill = "#D4CC98";
             if (isSelected) fill = "#FFE870";
-            else if (isHovered && hasClubs) fill = "#E8DC90";
-
-            const points = geoPointsToSvgPath(
-              country.geo_points,
-              config.projection,
-            );
+            else if (isHovered && hasClubs) fill = "#E0D890";
 
             return (
-              <polygon
-                key={country.id}
-                points={points}
+              <path
+                key={cf.key}
+                d={cf.path}
                 fill={fill}
-                stroke={isSelected ? "#8A6A10" : "#8A8260"}
-                strokeWidth={isSelected ? 2 : 0.8}
+                stroke={isSelected ? "#8A6A10" : "#7A7A60"}
+                strokeWidth={isSelected ? 1.8 : 0.6}
                 strokeLinejoin="round"
                 style={{ cursor: hasClubs ? "pointer" : "default" }}
-                onMouseEnter={() => hasClubs && setHoveredId(country.id)}
+                onMouseEnter={() => hasClubs && setHoveredId(cf.key)}
                 onMouseLeave={() => setHoveredId(null)}
-                onPointerDown={() => hasClubs && onSelectCountry(country.id)}
+                onPointerDown={() => hasClubs && onSelectCountry(cf.key)}
                 role={hasClubs ? "button" : undefined}
-                aria-label={hasClubs ? country.name : undefined}
+                aria-label={hasClubs ? countryInfo[cf.key]?.name : undefined}
                 tabIndex={hasClubs ? 0 : undefined}
                 onKeyDown={(e) => {
                   if (hasClubs && (e.key === "Enter" || e.key === " ")) {
                     e.preventDefault();
-                    onSelectCountry(country.id);
+                    onSelectCountry(cf.key);
                   }
                 }}
               />
             );
           })}
-
-          {/* Flag badges — only for countries that have clubs */}
-          {visibleCountries
-            .filter((c) => clubCountryIds.includes(c.id))
-            .map((country) => {
-              const [cx, cy] = config.projection(
-                country.flag_center[0],
-                country.flag_center[1],
-              );
-              const isSelected = country.id === selectedCountryId;
-
-              return (
-                <g
-                  key={`flag-${country.id}`}
-                  onPointerDown={() => onSelectCountry(country.id)}
-                  style={{ cursor: "pointer" }}
-                  filter={isSelected ? "url(#gold-glow)" : undefined}
-                  role="button"
-                  aria-label={`${country.flag} ${country.name}`}
-                >
-                  {/* Pulsing glow ring for selected country */}
-                  {isSelected && (
-                    <rect
-                      x={cx - 16}
-                      y={cy - 12}
-                      width={32}
-                      height={24}
-                      rx={3}
-                      fill="none"
-                      stroke="#D4A843"
-                      strokeWidth={1.5}
-                      opacity={0.7}
-                    >
-                      <animate
-                        attributeName="opacity"
-                        values="0.3;0.9;0.3"
-                        dur="1.8s"
-                        repeatCount="indefinite"
-                      />
-                      <animate
-                        attributeName="stroke-width"
-                        values="1;2.5;1"
-                        dur="1.8s"
-                        repeatCount="indefinite"
-                      />
-                    </rect>
-                  )}
-
-                  {/* Badge background */}
-                  <rect
-                    x={cx - 14}
-                    y={cy - 10}
-                    width={28}
-                    height={20}
-                    rx={2}
-                    fill={isSelected ? "#1a1a2e" : "#ffffff"}
-                    stroke={isSelected ? "#D4A843" : "#888"}
-                    strokeWidth={isSelected ? 1.5 : 0.5}
-                  />
-
-                  {/* Flag emoji */}
-                  <text
-                    x={cx}
-                    y={cy + 5}
-                    textAnchor="middle"
-                    fontSize={12}
-                    className="select-none pointer-events-none"
-                  >
-                    {country.flag}
-                  </text>
-                </g>
-              );
-            })}
         </svg>
+
+        {/* Flag badges as HTML overlays — NEVER use SVG <text> for emoji flags */}
+        {countryFeatures
+          .filter((cf) => countriesWithClubs.has(cf.key))
+          .map((cf) => {
+            const isSelected = cf.key === selectedCountry;
+            const info = countryInfo[cf.key];
+            if (!info) return null;
+
+            return (
+              <div
+                key={`flag-${cf.key}`}
+                style={{
+                  position: "absolute",
+                  left: `${(cf.centroid[0] / SVG_WIDTH) * 100}%`,
+                  top: `${(cf.centroid[1] / SVG_HEIGHT) * 100}%`,
+                  transform: "translate(-50%, -50%)",
+                  cursor: "pointer",
+                  zIndex: isSelected ? 10 : 1,
+                }}
+                onClick={() => onSelectCountry(cf.key)}
+                role="button"
+                aria-label={`${info.flag} ${info.name}`}
+              >
+                <div
+                  style={{
+                    width: 28,
+                    height: 20,
+                    backgroundColor: isSelected ? "#1a1a2e" : "#ffffff",
+                    border: `${isSelected ? 2 : 1.5}px solid ${isSelected ? "#D4A843" : "#555"}`,
+                    borderRadius: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 13,
+                    lineHeight: 1,
+                    boxShadow: isSelected
+                      ? "0 0 10px rgba(212,168,67,0.7)"
+                      : "0 1px 3px rgba(0,0,0,0.35)",
+                  }}
+                >
+                  {info.flag}
+                </div>
+              </div>
+            );
+          })}
       </div>
     </div>
   );
