@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@theme {
+  /* Stadium Archive (Landing) */
+  --color-pitch-black: #0A0A0A;
+  --color-tunnel-grey: #1A1A1A;
+  --color-tunnel-border: #2A2A2A;
+  --color-floodlight-white: #F5F0E8;
+  --color-programme-cream: #E8DCC8;
+  --color-whistle-gold: #D4A843;
+
+  /* Retro PC Fútbol */
+  --color-retro-bg-start: #5B6B8A;
+  --color-retro-bg-mid: #3D4F6F;
+  --color-retro-bg-end: #2C3E5A;
+  --color-retro-panel-start: #2A3A54;
+  --color-retro-panel-end: #1E2E48;
+  --color-map-water: #7CA8C4;
+  --color-map-land: #D4CC98;
+  --color-map-border: #8A8260;
+  --color-map-hover: #E8DC90;
+  --color-map-selected: #FFE870;
+  --color-map-selected-border: #8A6A10;
+  --color-retro-gold: #E8C840;
+  --color-retro-green: #88CC88;
+  --color-retro-blue: #88AACC;
+
+  /* Stat bar colors */
+  --color-stat-green: #30C040;
+  --color-stat-blue: #30A0E0;
+  --color-stat-yellow: #E8C840;
+  --color-stat-red: #D83030;
+
+  /* Fonts */
+  --font-oswald: "Oswald", sans-serif;
+  --font-source-serif: "Source Serif 4", serif;
+  --font-jetbrains: "JetBrains Mono", monospace;
+}
+
+/* Retro beveled button styles */
+.retro-btn-outset {
+  border: 2px outset #c0c0c0;
+  background: linear-gradient(180deg, #d8d8d8, #b0b0b0);
+}
+
+.retro-btn-outset:hover {
+  background: linear-gradient(180deg, #e0e0e0, #c0c0c0);
+}
+
+.retro-btn-outset:active {
+  border-style: inset;
+}
+
+.retro-panel-inset {
+  border: 3px inset #a0a0a0;
+  background: linear-gradient(180deg, #c8c8c8, #a8a8a8);
+}
+
+/* Retro dark panel */
+.retro-dark-panel {
+  background: linear-gradient(180deg, #2A3A54, #1E2E48);
+  border: 2px outset #4a5a7a;
+}
+
+/* Halftone texture overlay */
+.halftone-overlay {
+  background-image: radial-gradient(circle, #ffffff08 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+/* Scan lines */
+.scan-lines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.05) 2px,
+    rgba(0, 0, 0, 0.05) 4px
+  );
+}
+
+/* Film grain */
+.film-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Shake animation for rejected offers */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Pulsing gold glow for selected flag badge */
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 4px #D4A843; }
+  50% { box-shadow: 0 0 12px #D4A843, 0 0 20px #D4A84366; }
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
