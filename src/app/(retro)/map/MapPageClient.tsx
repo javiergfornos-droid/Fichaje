@@ -51,7 +51,7 @@ export default function MapPageClient({ countries, clubs }: MapPageClientProps) 
   );
 
   return (
-    <div className="flex gap-0 h-[calc(100vh-60px)]">
+    <div className="flex gap-0 h-[calc(100vh-56px-32px-2rem)] sm:h-[calc(100vh-64px-32px-2rem)]">
       {/* ── Left vertical continent tabs ── */}
       <div
         style={{

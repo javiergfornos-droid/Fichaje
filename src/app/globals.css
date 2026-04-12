@@ -111,3 +111,43 @@
 .animate-pulse-gold {
   animation: pulse-gold 2s ease-in-out infinite;
 }
+
+/* Toast slide-in animation */
+@keyframes slide-in-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 640px) {
+  @keyframes slide-in-toast {
+    0% {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+.animate-slide-in-toast {
+  animation: slide-in-toast 0.22s ease-out;
+}
+
+/* Focus ring — AA accessible */
+*:focus-visible {
+  outline: 2px solid #D4A843;
+  outline-offset: 2px;
+}
+
+/* Better mobile tap targets */
+button, a {
+  -webkit-tap-highlight-color: rgba(212, 168, 67, 0.2);
+}
