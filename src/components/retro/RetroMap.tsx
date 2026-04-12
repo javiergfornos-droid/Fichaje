@@ -20,8 +20,6 @@ interface CountryFeature {
   flagCode: string;
   path: string;
   centroid: [number, number];
-  pathBoundsWidth: number;
-  pathBoundsHeight: number;
 }
 
 interface RetroMapProps {
@@ -52,12 +50,6 @@ function getContinentIsos(cont: Continent): Set<string> {
   return cont === "europe" ? EUROPE_ISOS : AMERICAS_ISOS;
 }
 
-/** Pick flag image resolution based on rendered size */
-function flagUrl(code: string, boundsMax: number): string {
-  const size = boundsMax > 200 ? 160 : boundsMax > 100 ? 80 : 40;
-  return `https://flagcdn.com/w${size}/${code}.png`;
-}
-
 export default function RetroMap({
   continent,
   selectedCountry,
@@ -71,7 +63,12 @@ export default function RetroMap({
   const worldDataRef = useRef<Topology | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const [svgRect, setSvgRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const [svgRect, setSvgRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   // Measure the SVG's actual rendered position within the container
   useEffect(() => {
@@ -106,7 +103,9 @@ export default function RetroMap({
       }
       processFeatures(worldDataRef.current, continent);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -125,7 +124,7 @@ export default function RetroMap({
       const code = ISO_NUM_TO_FLAG_CODE[iso];
       if (code) {
         const img = new Image();
-        img.src = `https://flagcdn.com/w160/${code}.png`;
+        img.src = `https://flagcdn.com/w40/${code}.png`;
       }
     });
   }, [continent]);
@@ -143,7 +142,12 @@ export default function RetroMap({
 
       const features: CountryFeature[] = [];
 
-      for (const feature of (countriesGeo as { type: "FeatureCollection"; features: Feature<Geometry>[] }).features) {
+      for (const feature of (
+        countriesGeo as {
+          type: "FeatureCollection";
+          features: Feature<Geometry>[];
+        }
+      ).features) {
         const isoNum = String(feature.id);
         if (!isos.has(isoNum)) continue;
 
@@ -153,19 +157,19 @@ export default function RetroMap({
 
         const path = pathGenerator(feature);
         const centroid = pathGenerator.centroid(feature);
-        const bounds = pathGenerator.bounds(feature);
 
-        if (path && centroid && isFinite(centroid[0]) && isFinite(centroid[1])) {
-          const bw = bounds[1][0] - bounds[0][0];
-          const bh = bounds[1][1] - bounds[0][1];
+        if (
+          path &&
+          centroid &&
+          isFinite(centroid[0]) &&
+          isFinite(centroid[1])
+        ) {
           features.push({
             key,
             iso: isoNum,
             flagCode,
             path,
             centroid,
-            pathBoundsWidth: bw,
-            pathBoundsHeight: bh,
           });
         }
       }
@@ -194,14 +198,15 @@ export default function RetroMap({
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center" style={{
-        border: "4px solid #888",
-        borderTopColor: "#ccc",
-        borderLeftColor: "#ccc",
-        borderBottomColor: "#555",
-        borderRightColor: "#555",
-        background: "#6A8AAC",
-      }}>
+      <div
+        className="h-full flex items-center justify-center"
+        style={{
+          border: "6px solid #1A2640",
+          boxShadow: "inset 0 0 0 2px #3A4A6A",
+          background:
+            "linear-gradient(180deg, #A8C8E0 0%, #7AA0C0 40%, #5878A0 100%)",
+        }}
+      >
         <p className="text-[#E8D898] font-mono text-sm animate-pulse">
           Cargando mapa...
         </p>
@@ -211,21 +216,16 @@ export default function RetroMap({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Thick beveled 3D frame around the map area */}
+      {/* Thick dark navy frame — matches PC Fútbol reference */}
       <div
         ref={containerRef}
         className="flex-1 touch-manipulation"
         style={{
           position: "relative",
           overflow: "hidden",
-          /* Outer bevel — light top-left, dark bottom-right */
-          border: "4px solid #888",
-          borderTopColor: "#ccc",
-          borderLeftColor: "#ccc",
-          borderBottomColor: "#555",
-          borderRightColor: "#555",
-          /* Inner shadow for depth */
-          boxShadow: "inset 0 0 8px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.4)",
+          border: "6px solid #1A2640",
+          boxShadow:
+            "inset 0 0 0 2px #3A4A6A, inset 0 0 12px rgba(0,0,0,0.3)",
         }}
       >
         <svg
@@ -233,82 +233,72 @@ export default function RetroMap({
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
           className="w-full h-full"
           preserveAspectRatio="xMidYMid meet"
-          style={{ backgroundColor: "#6A8AAC", display: "block" }}
-          aria-label={`Mapa de ${continent === "europe" ? "EUROPA" : "AMÉRICAS"}`}
+          style={{ display: "block" }}
+          aria-label={`Mapa de ${continent === "europe" ? "EUROPA" : "SUDAMÉRICA"}`}
         >
-          {/* Wave banding pattern for water texture */}
           <defs>
-            <pattern
-              id="water-waves"
-              patternUnits="userSpaceOnUse"
-              width="60"
-              height="12"
+            {/* Water gradient — light blue top, darker bottom */}
+            <linearGradient
+              id="water-grad"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
             >
-              <path
-                d="M0 6 Q15 2 30 6 Q45 10 60 6"
-                fill="none"
-                stroke="rgba(255,255,255,0.06)"
-                strokeWidth="1"
-              />
-            </pattern>
+              <stop offset="0%" stopColor="#A8C8E0" />
+              <stop offset="40%" stopColor="#7AA0C0" />
+              <stop offset="100%" stopColor="#5878A0" />
+            </linearGradient>
 
-            {/* Flag patterns */}
-            {countryFeatures.map((cf) => (
-              <pattern
-                key={`pat-${cf.iso}`}
-                id={`flag-${cf.iso}`}
-                patternUnits="objectBoundingBox"
-                width="1"
-                height="1"
-                patternContentUnits="objectBoundingBox"
-              >
-                <image
-                  href={flagUrl(cf.flagCode, Math.max(cf.pathBoundsWidth, cf.pathBoundsHeight))}
-                  width="1"
-                  height="1"
-                  preserveAspectRatio="xMidYMid slice"
-                />
-              </pattern>
-            ))}
+            {/* Subtle halftone/dither texture for retro feel */}
+            <pattern
+              id="dither"
+              patternUnits="userSpaceOnUse"
+              width="4"
+              height="4"
+            >
+              <rect width="4" height="4" fill="transparent" />
+              <rect x="0" y="0" width="1" height="1" fill="rgba(0,0,0,0.03)" />
+              <rect x="2" y="2" width="1" height="1" fill="rgba(0,0,0,0.03)" />
+            </pattern>
           </defs>
 
-          {/* Water wave overlay */}
+          {/* Water background with gradient */}
           <rect
             x="0"
             y="0"
             width={SVG_WIDTH}
             height={SVG_HEIGHT}
-            fill="url(#water-waves)"
+            fill="url(#water-grad)"
           />
 
-          {/* Country paths with flag pattern fills */}
+          {/* Dither texture overlay on water */}
+          <rect
+            x="0"
+            y="0"
+            width={SVG_WIDTH}
+            height={SVG_HEIGHT}
+            fill="url(#dither)"
+          />
+
+          {/* Country paths — solid golden yellow, dark borders */}
           {countryFeatures.map((cf) => {
             const hasClubs = countriesWithClubs.has(cf.key);
             const isSelected = cf.key === selectedCountry;
             const isHovered = cf.key === hoveredId;
 
-            let fill: string;
-            if (isSelected) {
-              fill = "#FFE870";
-            } else if (hasClubs) {
-              fill = `url(#flag-${cf.iso})`;
-            } else {
-              fill = "#E8D898"; // Lighter parchment for no-club countries
-            }
-
             return (
               <path
                 key={cf.key}
                 d={cf.path}
-                fill={fill}
-                stroke="#3A2A1A"
-                strokeWidth={isSelected ? 1.2 : 0.5}
+                fill={isSelected ? "#FFE870" : "#E0C858"}
+                stroke="#8A7A50"
+                strokeWidth={isSelected ? 1.2 : 0.6}
                 strokeLinejoin="round"
                 style={{
                   cursor: hasClubs ? "pointer" : "default",
-                  transition: "stroke-width 0.15s, opacity 0.15s",
-                  opacity: isSelected ? 1 : isHovered ? 1 : hasClubs ? 0.9 : 0.7,
-                  filter: hasClubs ? "none" : "saturate(0.2) brightness(1.05)",
+                  transition: "fill 0.15s",
+                  opacity: isHovered && hasClubs ? 0.9 : 1,
                 }}
                 onMouseEnter={() => hasClubs && setHoveredId(cf.key)}
                 onMouseLeave={() => setHoveredId(null)}
@@ -326,103 +316,85 @@ export default function RetroMap({
             );
           })}
 
-          {/* Hover brightness overlay */}
-          {hoveredId && hoveredId !== selectedCountry && (() => {
-            const hovered = countryFeatures.find((cf) => cf.key === hoveredId);
-            if (!hovered || !countriesWithClubs.has(hovered.key)) return null;
-            return (
-              <path
-                d={hovered.path}
-                fill="rgba(255, 255, 255, 0.15)"
-                stroke="none"
-                style={{ pointerEvents: "none" }}
-              />
-            );
-          })()}
+          {/* Hover highlight overlay */}
+          {hoveredId &&
+            hoveredId !== selectedCountry &&
+            (() => {
+              const hovered = countryFeatures.find(
+                (cf) => cf.key === hoveredId
+              );
+              if (!hovered || !countriesWithClubs.has(hovered.key)) return null;
+              return (
+                <path
+                  d={hovered.path}
+                  fill="rgba(255, 255, 255, 0.12)"
+                  stroke="none"
+                  style={{ pointerEvents: "none" }}
+                />
+              );
+            })()}
         </svg>
 
-        {/* Flag pin badges as HTML overlays */}
-        {svgRect && countryFeatures
-          .filter((cf) => countriesWithClubs.has(cf.key))
-          .map((cf) => {
-            const isSelected = cf.key === selectedCountry;
-            const isHovered = cf.key === hoveredId;
-            const info = countryInfo[cf.key];
-            if (!info) return null;
+        {/* Flag badges — flat rectangles with dark border, placed on centroids */}
+        {svgRect &&
+          countryFeatures
+            .filter((cf) => countriesWithClubs.has(cf.key))
+            .map((cf) => {
+              const isSelected = cf.key === selectedCountry;
+              const isHovered = cf.key === hoveredId;
+              const info = countryInfo[cf.key];
+              if (!info) return null;
 
-            const pos = viewBoxToPixel(cf.centroid[0], cf.centroid[1]);
-            if (!pos) return null;
+              const pos = viewBoxToPixel(cf.centroid[0], cf.centroid[1]);
+              if (!pos) return null;
 
-            const scale = isSelected ? 1.15 : isHovered ? 1.08 : 1;
-
-            return (
-              <div
-                key={`pin-${cf.key}`}
-                style={{
-                  position: "absolute",
-                  left: pos.left,
-                  top: pos.top,
-                  /* Anchor at bottom-center so pin points to the country */
-                  transform: `translate(-50%, -100%) scale(${scale})`,
-                  transformOrigin: "bottom center",
-                  cursor: "pointer",
-                  zIndex: isSelected ? 10 : isHovered ? 5 : 1,
-                  pointerEvents: "auto",
-                  transition: "transform 0.2s ease-out, filter 0.2s",
-                  filter: isSelected
-                    ? "drop-shadow(0 0 8px rgba(212,168,67,0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))"
-                    : "drop-shadow(0 2px 4px rgba(0,0,0,0.45))",
-                }}
-                onClick={() => onSelectCountry(cf.key)}
-                onMouseEnter={() => setHoveredId(cf.key)}
-                onMouseLeave={() => setHoveredId(null)}
-                role="button"
-                aria-label={`${info.flag} ${info.name}`}
-              >
-                {/* Pin pole line */}
+              return (
                 <div
+                  key={`flag-${cf.key}`}
                   style={{
                     position: "absolute",
-                    bottom: 0,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: 2,
-                    height: 8,
-                    background: "linear-gradient(180deg, #888, #444)",
-                    borderRadius: "0 0 1px 1px",
+                    left: pos.left,
+                    top: pos.top,
+                    transform: "translate(-50%, -50%)",
+                    cursor: "pointer",
+                    zIndex: isSelected ? 10 : isHovered ? 5 : 1,
+                    pointerEvents: "auto",
                   }}
-                />
-                {/* Flag frame */}
-                <div
-                  style={{
-                    marginBottom: 6,
-                    backgroundColor: isSelected ? "#1a1a2e" : "#fff",
-                    border: isSelected
-                      ? "2px solid #D4A843"
-                      : "2px solid #fff",
-                    borderRadius: "2px",
-                    padding: 1,
-                    boxShadow: isSelected
-                      ? "0 0 10px rgba(212,168,67,0.7), inset 0 0 2px rgba(0,0,0,0.2)"
-                      : "0 1px 3px rgba(0,0,0,0.35), inset 0 0 1px rgba(0,0,0,0.1)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  className={isSelected ? "animate-pulse-gold" : ""}
+                  onClick={() => onSelectCountry(cf.key)}
+                  onMouseEnter={() => setHoveredId(cf.key)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  role="button"
+                  aria-label={`${info.flag} ${info.name}`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://flagcdn.com/w40/${cf.flagCode}.png`}
-                    alt={info.name}
-                    width={24}
-                    height={16}
-                    style={{ display: "block", borderRadius: "1px" }}
-                  />
+                  <div
+                    style={{
+                      border: isSelected
+                        ? "2px solid #D4A843"
+                        : isHovered
+                          ? "2px solid #555"
+                          : "1.5px solid #333",
+                      background: "#1E2A40",
+                      padding: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: isSelected
+                        ? "0 0 6px rgba(212,168,67,0.6)"
+                        : "none",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://flagcdn.com/w40/${cf.flagCode}.png`}
+                      alt={info.name}
+                      width={24}
+                      height={16}
+                      style={{ display: "block" }}
+                    />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
       </div>
     </div>
   );
