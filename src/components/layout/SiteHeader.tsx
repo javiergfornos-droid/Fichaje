@@ -1,33 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useCallback, useEffect } from "react";
-import { Search, Heart, ShoppingBag, User, X, Menu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, ShoppingBag, User, X, Menu, Search } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useCartDrawer } from "@/contexts/CartDrawerContext";
+import { useI18n } from "@/contexts/I18nContext";
+import SearchAutocomplete from "@/components/layout/SearchAutocomplete";
+import LanguageToggle from "@/components/layout/LanguageToggle";
 
 /**
  * Global site header — sticky, mobile-first navigation.
  *
  * Desktop (≥ 768px):
- *   [LOGO]  [search bar · flex-1]  [♡ Cartera] [🛒 Carrito] [👤 Cuenta]
+ *   [LOGO] [search+autocomplete] [Browse] [Map] [ES|EN] [♡] [🛒-drawer] [👤]
  *
  * Mobile (< 768px):
- *   [LOGO]                         [🔍] [🛒] [≡]
- *   [optional expanded search row]
- *   [optional expanded mobile menu]
+ *   [LOGO]                                      [🔍] [🛒-drawer] [≡]
  */
 export default function SiteHeader() {
-  const router = useRouter();
   const { count: cartCount, isHydrated: cartHydrated } = useCart();
   const { count: wishCount, isHydrated: wishHydrated } = useWishlist();
+  const { open: openCartDrawer } = useCartDrawer();
+  const { t } = useI18n();
 
-  const [query, setQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Close mobile menu/search on route change (listen to history popstate)
   useEffect(() => {
     const close = () => {
       setMobileMenuOpen(false);
@@ -36,18 +36,6 @@ export default function SiteHeader() {
     window.addEventListener("popstate", close);
     return () => window.removeEventListener("popstate", close);
   }, []);
-
-  const handleSearch = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const q = query.trim();
-      if (!q) return;
-      router.push(`/search?q=${encodeURIComponent(q)}`);
-      setMobileSearchOpen(false);
-      setMobileMenuOpen(false);
-    },
-    [query, router]
-  );
 
   return (
     <header
@@ -60,30 +48,15 @@ export default function SiteHeader() {
         <Link
           href="/"
           className="font-[family-name:var(--font-oswald)] text-lg sm:text-xl font-bold text-[#D4A843] hover:text-[#E8C840] transition-colors no-underline shrink-0 tracking-tight"
-          aria-label="¡FICHAJE! — Ir al inicio"
+          aria-label="¡FICHAJE! — home"
         >
           ¡FICHAJE!
         </Link>
 
         {/* Desktop search */}
-        <form
-          onSubmit={handleSearch}
-          className="hidden md:flex flex-1 max-w-xl mx-4 relative"
-          role="search"
-        >
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666] pointer-events-none"
-            aria-hidden
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar camisetas, clubes, jugadores…"
-            className="w-full pl-10 pr-4 py-2 bg-[#141414] border border-[#2A2A2A] text-[#F5F0E8] font-[family-name:var(--font-source-serif)] text-sm placeholder-[#555] focus:border-[#D4A843] focus:outline-none focus:ring-1 focus:ring-[#D4A843] transition-colors"
-            aria-label="Buscar camisetas, clubes, jugadores"
-          />
-        </form>
+        <div className="hidden md:block flex-1 max-w-xl mx-4">
+          <SearchAutocomplete variant="desktop" />
+        </div>
 
         {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-1">
@@ -91,33 +64,31 @@ export default function SiteHeader() {
             href="/browse"
             className="px-3 py-2 font-[family-name:var(--font-oswald)] text-xs font-bold text-[#B0B0B0] hover:text-[#D4A843] uppercase tracking-wider transition-colors no-underline"
           >
-            Explorar
+            {t("nav.explore")}
           </Link>
           <Link
             href="/map"
             className="px-3 py-2 font-[family-name:var(--font-oswald)] text-xs font-bold text-[#B0B0B0] hover:text-[#D4A843] uppercase tracking-wider transition-colors no-underline"
           >
-            Mapa
+            {t("nav.map")}
           </Link>
         </nav>
 
-        {/* Mobile icons (right side) */}
+        {/* Mobile icons (right) */}
         <div className="flex md:hidden items-center gap-1 ml-auto">
           <IconButton
-            label="Buscar"
+            label={t("nav.search.label")}
             onClick={() => setMobileSearchOpen((v) => !v)}
           >
             {mobileSearchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
           </IconButton>
-          <IconLink
-            href="/cart"
-            label="Carrito"
-            badge={cartHydrated ? cartCount : 0}
-          >
-            <ShoppingBag className="w-5 h-5" />
-          </IconLink>
+          <CartIconButton
+            count={cartHydrated ? cartCount : 0}
+            label={t("nav.cart")}
+            onClick={openCartDrawer}
+          />
           <IconButton
-            label="Menú"
+            label={t("nav.menu")}
             onClick={() => setMobileMenuOpen((v) => !v)}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -125,22 +96,17 @@ export default function SiteHeader() {
         </div>
 
         {/* Desktop right-side actions */}
-        <div className="hidden md:flex items-center gap-1 ml-auto">
-          <IconLink
-            href="/wishlist"
-            label="Cartera"
-            badge={wishHydrated ? wishCount : 0}
-          >
+        <div className="hidden md:flex items-center gap-2 ml-auto">
+          <LanguageToggle variant="compact" />
+          <IconLink href="/wishlist" label={t("nav.wishlist")} badge={wishHydrated ? wishCount : 0}>
             <Heart className="w-5 h-5" />
           </IconLink>
-          <IconLink
-            href="/cart"
-            label="Carrito"
-            badge={cartHydrated ? cartCount : 0}
-          >
-            <ShoppingBag className="w-5 h-5" />
-          </IconLink>
-          <IconLink href="/account" label="Cuenta">
+          <CartIconButton
+            count={cartHydrated ? cartCount : 0}
+            label={t("nav.cart")}
+            onClick={openCartDrawer}
+          />
+          <IconLink href="/account" label={t("nav.account")}>
             <User className="w-5 h-5" />
           </IconLink>
         </div>
@@ -149,21 +115,11 @@ export default function SiteHeader() {
       {/* Mobile expanded search */}
       {mobileSearchOpen && (
         <div className="md:hidden border-t border-[#1A1A1A] px-4 py-3 bg-[#0A0A0A]">
-          <form onSubmit={handleSearch} role="search" className="relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666] pointer-events-none"
-              aria-hidden
-            />
-            <input
-              autoFocus
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar camisetas, clubes, jugadores…"
-              className="w-full pl-10 pr-4 py-3 bg-[#141414] border border-[#2A2A2A] text-[#F5F0E8] font-[family-name:var(--font-source-serif)] text-sm placeholder-[#555] focus:border-[#D4A843] focus:outline-none"
-              aria-label="Buscar camisetas, clubes, jugadores"
-            />
-          </form>
+          <SearchAutocomplete
+            variant="mobile"
+            autoFocus
+            onSubmitted={() => setMobileSearchOpen(false)}
+          />
         </div>
       )}
 
@@ -171,17 +127,19 @@ export default function SiteHeader() {
       {mobileMenuOpen && (
         <nav
           className="md:hidden border-t border-[#1A1A1A] bg-[#0A0A0A]"
-          aria-label="Navegación principal"
+          aria-label={t("nav.menu")}
         >
-          <MobileLink href="/browse" label="Explorar camisetas" onNavigate={() => setMobileMenuOpen(false)} />
-          <MobileLink href="/map" label="Mapa de fichajes" onNavigate={() => setMobileMenuOpen(false)} />
+          <LanguageToggle variant="full" />
+          <MobileLink href="/browse" label={t("nav.explore")} onNavigate={() => setMobileMenuOpen(false)} />
+          <MobileLink href="/map" label={t("nav.map")} onNavigate={() => setMobileMenuOpen(false)} />
           <MobileLink
             href="/wishlist"
-            label="Mi cartera"
+            label={t("nav.wishlist")}
             badge={wishHydrated ? wishCount : 0}
             onNavigate={() => setMobileMenuOpen(false)}
           />
-          <MobileLink href="/account" label="Mi cuenta" onNavigate={() => setMobileMenuOpen(false)} />
+          <MobileLink href="/account" label={t("nav.account")} onNavigate={() => setMobileMenuOpen(false)} />
+          <MobileLink href="/faq" label={t("footer.faq")} onNavigate={() => setMobileMenuOpen(false)} />
         </nav>
       )}
     </header>
@@ -208,14 +166,7 @@ function IconLink({
       className="relative p-2.5 text-[#E8DCC8] hover:text-[#D4A843] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center no-underline"
     >
       {children}
-      {badge !== undefined && badge > 0 && (
-        <span
-          className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#D4A843] text-[#0A0A0A] font-[family-name:var(--font-jetbrains)] text-[10px] font-bold flex items-center justify-center leading-none"
-          aria-hidden
-        >
-          {badge > 99 ? "99+" : badge}
-        </span>
-      )}
+      {badge !== undefined && badge > 0 && <Badge value={badge} />}
     </Link>
   );
 }
@@ -238,6 +189,39 @@ function IconButton({
     >
       {children}
     </button>
+  );
+}
+
+function CartIconButton({
+  count,
+  label,
+  onClick,
+}: {
+  count: number;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={count > 0 ? `${label} (${count})` : label}
+      className="relative p-2.5 text-[#E8DCC8] hover:text-[#D4A843] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+    >
+      <ShoppingBag className="w-5 h-5" aria-hidden />
+      {count > 0 && <Badge value={count} />}
+    </button>
+  );
+}
+
+function Badge({ value }: { value: number }) {
+  return (
+    <span
+      className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#D4A843] text-[#0A0A0A] font-[family-name:var(--font-jetbrains)] text-[10px] font-bold flex items-center justify-center leading-none"
+      aria-hidden
+    >
+      {value > 99 ? "99+" : value}
+    </span>
   );
 }
 

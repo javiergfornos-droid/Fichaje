@@ -2,6 +2,8 @@ import ShirtPageClient from "./ShirtPageClient";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { Shirt } from "@/types/shirt";
+import type { FitType } from "@/components/shop/ProductSpecs";
+import type { FaqItem } from "@/components/shop/FaqAccordion";
 
 // Demo data — in production fetched from Supabase by slug
 const DEMO_SHIRTS: Record<string, Shirt> = {
@@ -16,6 +18,42 @@ const CLUB_NAMES: Record<string, string> = {
   fcb: "FC Barcelona",
   juv: "Juventus FC",
 };
+
+// Per-shirt fit hint (in production would live in the DB row)
+const SHIRT_FIT: Record<string, FitType> = {
+  "arsenal-bruised-banana-1991": "oversized",
+  "arsenal-home-2003-04": "regular",
+  "barcelona-home-2005-06": "regular",
+  "juventus-home-1995-96": "regular",
+};
+
+// PDP-scoped FAQ — in production pulled by shirt type / brand
+const DEFAULT_FAQ: FaqItem[] = [
+  {
+    id: "authenticity",
+    question: "¿Cómo garantizáis que es original?",
+    answer:
+      "Cada camiseta pasa por un proceso de autenticación por parte de nuestros expertos. Revisamos etiquetas, tejidos, costuras y serigrafías antes de ponerla a la venta.",
+  },
+  {
+    id: "shipping-time",
+    question: "¿Cuándo llegará a casa?",
+    answer:
+      "Preparamos y enviamos el pedido en 24h laborables. España peninsular 24-48h, resto de Europa 3-5 días laborables.",
+  },
+  {
+    id: "returns",
+    question: "¿Puedo devolverla si no me queda bien?",
+    answer:
+      "Sí. Tienes 14 días desde que recibes el pedido para devolverla en el mismo estado. Reembolsamos el importe íntegro incluido el envío.",
+  },
+  {
+    id: "size",
+    question: "¿Las tallas vintage son iguales a las actuales?",
+    answer:
+      "Las camisetas vintage suelen venir con un corte ligeramente más holgado que las actuales. Consulta la guía de corte para ajustar tu elección.",
+  },
+];
 
 /**
  * Shirt detail page (PDP).
@@ -51,6 +89,7 @@ export default async function ShirtPage({
   }
 
   const clubName = CLUB_NAMES[shirt.club_id] ?? "Club";
+  const fit = SHIRT_FIT[slug] ?? "regular";
 
   // Related products: same club, excluding current shirt (demo fallback)
   const relatedShirts = Object.values(DEMO_SHIRTS).filter(
@@ -88,6 +127,8 @@ export default async function ShirtPage({
         shirt={shirt}
         clubName={clubName}
         relatedShirts={relatedShirts}
+        fit={fit}
+        faqItems={DEFAULT_FAQ}
       />
     </div>
   );

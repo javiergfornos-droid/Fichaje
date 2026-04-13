@@ -141,6 +141,17 @@
   animation: slide-in-toast 0.22s ease-out;
 }
 
+/* Cart drawer + dialog animations */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Focus ring — AA accessible */
 *:focus-visible {
   outline: 2px solid #D4A843;

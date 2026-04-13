@@ -4,7 +4,12 @@ import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { I18nProvider } from "@/contexts/I18nContext";
+import { RecentlyViewedProvider } from "@/contexts/RecentlyViewedContext";
+import { CartDrawerProvider } from "@/contexts/CartDrawerContext";
 import SiteHeader from "@/components/layout/SiteHeader";
+import SiteFooter from "@/components/layout/SiteFooter";
+import CartDrawer from "@/components/shop/CartDrawer";
 import ToastViewport from "@/components/ui/Toast";
 
 const oswald = Oswald({
@@ -46,15 +51,23 @@ export default function RootLayout({
       className={`${oswald.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}
     >
       <body className="antialiased bg-[#0A0A0A] text-[#F5F0E8] min-h-screen">
-        <CartProvider>
-          <WishlistProvider>
-            <ToastProvider>
-              <SiteHeader />
-              {children}
-              <ToastViewport />
-            </ToastProvider>
-          </WishlistProvider>
-        </CartProvider>
+        <I18nProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <RecentlyViewedProvider>
+                <CartDrawerProvider>
+                  <ToastProvider>
+                    <SiteHeader />
+                    {children}
+                    <SiteFooter />
+                    <CartDrawer />
+                    <ToastViewport />
+                  </ToastProvider>
+                </CartDrawerProvider>
+              </RecentlyViewedProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </I18nProvider>
       </body>
     </html>
   );
