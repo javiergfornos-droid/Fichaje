@@ -21,7 +21,7 @@ const features = [
 
 export default function TrustSection() {
   return (
-    <section className="py-20 px-6 bg-pitch-black">
+    <section className="py-20 px-6 bg-[#0A0A0A]/75 backdrop-blur-sm">
       <div className="max-w-5xl mx-auto">
         {/* Title */}
         <h2 className="font-[family-name:var(--font-oswald)] uppercase text-floodlight-white text-3xl sm:text-4xl font-bold text-center mb-12">

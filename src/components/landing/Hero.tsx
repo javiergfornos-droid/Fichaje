@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-pitch-black overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Halftone texture overlay */}
       <div className="absolute inset-0 halftone-overlay pointer-events-none" />
 
