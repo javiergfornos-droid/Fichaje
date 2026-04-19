@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Heart, ShoppingBag, User, X, Menu, Search } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Heart, ShoppingBag, User, X, Menu, Search, ChevronLeft } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
@@ -24,9 +25,20 @@ export default function SiteHeader() {
   const { count: wishCount, isHydrated: wishHydrated } = useWishlist();
   const { open: openCartDrawer } = useCartDrawer();
   const { t } = useI18n();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isMapRoute = pathname === "/map" || pathname?.startsWith("/map/");
 
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCanGoBack(window.history.length > 1);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const close = () => {
@@ -39,19 +51,55 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="sticky top-0 z-50 bg-[#0A0A0A] border-b border-[#1A1A1A]"
-      style={{ backdropFilter: "saturate(1.2)" }}
+      className="sticky top-0 z-50 bg-[#0A0A0A]"
+      style={{
+        backdropFilter: "saturate(1.2)",
+        borderBottom: isMapRoute ? "2px solid #D4A843" : "1px solid #1A1A1A",
+      }}
     >
       {/* Main bar */}
       <div className="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex items-center gap-3">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="font-[family-name:var(--font-oswald)] text-lg sm:text-xl font-bold text-[#D4A843] hover:text-[#E8C840] transition-colors no-underline shrink-0 tracking-tight"
-          aria-label="¡FICHAJE! — home"
-        >
-          ¡FICHAJE!
-        </Link>
+        {/* Logo — swaps to "FICHAJE MUNDIAL" on the map route (brand name, never translated) */}
+        {isMapRoute ? (
+          <Link
+            href="/"
+            className="font-[family-name:var(--font-oswald)] font-bold text-[#D4A843] hover:text-[#E8C840] transition-colors no-underline shrink-0"
+            style={{
+              fontSize: 24,
+              letterSpacing: "3px",
+              textTransform: "uppercase",
+              lineHeight: 1,
+            }}
+            aria-label="Fichaje Mundial — home"
+          >
+            FICHAJE MUNDIAL
+          </Link>
+        ) : (
+          <Link
+            href="/"
+            className="font-[family-name:var(--font-oswald)] text-lg sm:text-xl font-bold text-[#D4A843] hover:text-[#E8C840] transition-colors no-underline shrink-0 tracking-tight"
+            aria-label="¡FICHAJE! — home"
+          >
+            ¡FICHAJE!
+          </Link>
+        )}
+
+        {/* Back button — only on /map, only when there is navigable history */}
+        {isMapRoute && canGoBack && (
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Volver"
+            className="hidden md:flex items-center gap-1 px-3 py-1.5 font-[family-name:var(--font-oswald)] text-xs font-bold uppercase tracking-widest text-[#E8DCC8] hover:text-[#D4A843] transition-colors"
+            style={{
+              border: "2px outset #4a5a7a",
+              background: "linear-gradient(180deg, #2A3A54, #1A2A44)",
+            }}
+          >
+            <ChevronLeft className="w-4 h-4" aria-hidden />
+            Volver
+          </button>
+        )}
 
         {/* Desktop search */}
         <div className="hidden md:block flex-1 max-w-xl mx-4">

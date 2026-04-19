@@ -23,6 +23,7 @@ interface RetroMapProps {
   activeCountryIds: string[];
   onActiveClick: (country: Country) => void;
   onInactiveClick: (country: Country) => void;
+  onHoverCountry?: (country: Country | null) => void;
 }
 
 const SVG_WIDTH = 800;
@@ -38,8 +39,8 @@ function getProjection(cont: Continent): d3.GeoProjection {
   }
   return d3
     .geoMercator()
-    .center([-62, -20])
-    .scale(500)
+    .center([-62, -25])
+    .scale(460)
     .translate([SVG_WIDTH / 2, SVG_HEIGHT / 2]);
 }
 
@@ -50,6 +51,7 @@ export default function RetroMap({
   activeCountryIds,
   onActiveClick,
   onInactiveClick,
+  onHoverCountry,
 }: RetroMapProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [wigglingId, setWigglingId] = useState<string | null>(null);
@@ -228,6 +230,19 @@ export default function RetroMap({
     [activeSet, onActiveClick, onInactiveClick]
   );
 
+  const handleHoverEnter = useCallback(
+    (country: Country) => {
+      setHoveredId(country.id);
+      onHoverCountry?.(country);
+    },
+    [onHoverCountry]
+  );
+
+  const handleHoverLeave = useCallback(() => {
+    setHoveredId(null);
+    onHoverCountry?.(null);
+  }, [onHoverCountry]);
+
   if (loading) {
     return (
       <div
@@ -296,7 +311,7 @@ export default function RetroMap({
             fill="url(#dither)"
           />
 
-          {/* Country polygons — solid golden yellow, dark borders */}
+          {/* Country polygons — PC Fútbol yellow/cream palette, dark earth borders */}
           {polygons.map((rc) => {
             const c = rc.country;
             const hasClubs = activeSet.has(c.id);
@@ -304,27 +319,26 @@ export default function RetroMap({
             const isHovered = c.id === hoveredId;
             const isWiggling = c.id === wigglingId;
 
+            // Priority: selected > hover > active-default > inactive-default
+            let fill = hasClubs ? "#E0C858" : "#C8B048";
+            if (isHovered) fill = "#FFE870";
+            if (isSelected) fill = "#D4A843";
+
             return (
               <path
                 key={c.iso_numeric}
                 d={rc.path}
                 className={isWiggling ? "animate-country-wiggle" : undefined}
-                fill={
-                  isSelected
-                    ? "#FFE870"
-                    : isHovered && hasClubs
-                      ? "#FFE870"
-                      : "#E0C858"
-                }
+                fill={fill}
                 stroke="#8A7A50"
-                strokeWidth={isSelected ? 1.4 : 0.7}
+                strokeWidth={1}
                 strokeLinejoin="round"
                 style={{
-                  cursor: hasClubs ? "pointer" : "pointer",
+                  cursor: "pointer",
                   transition: "fill 0.1s ease-out",
                 }}
-                onMouseEnter={() => setHoveredId(c.id)}
-                onMouseLeave={() => setHoveredId(null)}
+                onMouseEnter={() => handleHoverEnter(c)}
+                onMouseLeave={handleHoverLeave}
                 onPointerDown={() => handleCountryClick(c)}
                 role="button"
                 aria-label={c.name}
@@ -364,8 +378,8 @@ export default function RetroMap({
                   pointerEvents: "auto",
                 }}
                 onClick={() => handleCountryClick(c)}
-                onMouseEnter={() => setHoveredId(c.id)}
-                onMouseLeave={() => setHoveredId(null)}
+                onMouseEnter={() => handleHoverEnter(c)}
+                onMouseLeave={handleHoverLeave}
                 role="button"
                 aria-label={c.name}
               >
