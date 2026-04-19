@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Oswald, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Oswald, Source_Serif_4, JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
+import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
@@ -30,6 +31,20 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const pressStart2P = Press_Start_2P({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-press-start",
+  display: "swap",
+});
+
+const vt323 = VT323({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-vt323",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "¡FICHAJE! — Camisetas de fútbol vintage originales",
   description:
@@ -48,7 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${oswald.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}
+      className={`${oswald.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} ${vt323.variable}`}
     >
       <body className="antialiased bg-[#0A0A0A] text-[#F5F0E8] min-h-screen">
         <I18nProvider>

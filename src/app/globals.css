@@ -89,6 +89,31 @@
   pointer-events: none;
 }
 
+/* Country wiggle — played on SVG paths when clicking a country with no shirts */
+@keyframes country-wiggle {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 0); }
+  40% { transform: translate(3px, 0); }
+  60% { transform: translate(-2px, 0); }
+  80% { transform: translate(2px, 0); }
+}
+
+.animate-country-wiggle {
+  animation: country-wiggle 0.2s ease-in-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Subtle alpha pulse for the active continent tab */
+@keyframes tab-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(0.9); }
+}
+
+.animate-tab-pulse {
+  animation: tab-pulse 2s ease-in-out infinite;
+}
+
 /* Shake animation for rejected offers */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
