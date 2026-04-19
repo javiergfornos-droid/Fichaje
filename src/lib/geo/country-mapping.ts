@@ -90,11 +90,13 @@ export const ISO_NUM_TO_FLAG_CODE: Record<string, string> = {
   "188": "cr", "320": "gt", "340": "hn",
 };
 
-/** Countries assigned to the Europe map tab */
+/** Countries assigned to the Europe map tab — includes context-only countries (no clubs). */
 export const EUROPE_ISOS = new Set([
   "620","724","250","826","056","528","276","208","578","752","246",
   "380","756","040","203","703","616","191","688","642","804","643","792",
   "372","348","100","300","070","705","112","440","428","233",
+  // v3 context additions: Iceland, Albania, Moldova, Montenegro, N. Macedonia, Luxembourg
+  "352","008","498","499","807","442",
 ]);
 
 /** Countries assigned to the Americas map tab */

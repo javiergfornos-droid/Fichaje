@@ -6,13 +6,19 @@ import * as topojson from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import type { Feature, Geometry } from "geojson";
 import type { Country } from "@/types/country";
+import { EUROPE_ISOS, AMERICAS_ISOS } from "@/lib/geo/country-mapping";
 
 type Continent = "europe" | "americas";
 
-interface RenderCountry {
-  country: Country;
+interface PolygonEntry {
+  iso: string;
   path: string;
-  centroid: [number, number];
+  /** DEMO countries sharing this polygon (0 = pure context country, 1 typical, 4 for UK). */
+  demoCountries: Country[];
+}
+
+interface FlagEntry {
+  country: Country;
   flagCenter: [number, number];
 }
 
@@ -55,7 +61,8 @@ export default function RetroMap({
 }: RetroMapProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [wigglingId, setWigglingId] = useState<string | null>(null);
-  const [renderCountries, setRenderCountries] = useState<RenderCountry[]>([]);
+  const [polygonEntries, setPolygonEntries] = useState<PolygonEntry[]>([]);
+  const [flagEntries, setFlagEntries] = useState<FlagEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const worldDataRef = useRef<Topology | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -149,62 +156,60 @@ export default function RetroMap({
         featureByIso.set(padded, f);
       }
 
-      const rendered: RenderCountry[] = [];
+      // Group DEMO countries by iso (UK has 4 siblings sharing "826")
+      const demoByIso = new Map<string, Country[]>();
       for (const c of list) {
-        const isoKey = c.iso_numeric.padStart(3, "0");
-        const feature = featureByIso.get(isoKey);
-        if (!feature) continue;
+        const iso = c.iso_numeric.padStart(3, "0");
+        const arr = demoByIso.get(iso) ?? [];
+        arr.push(c);
+        demoByIso.set(iso, arr);
+      }
 
+      // Visible isos = continent ISO set ∪ any demo iso for this continent
+      const continentIsos = cont === "europe" ? EUROPE_ISOS : AMERICAS_ISOS;
+      const visibleIsos = new Set<string>(continentIsos);
+      for (const iso of demoByIso.keys()) visibleIsos.add(iso);
+
+      // Build polygon entries
+      const polys: PolygonEntry[] = [];
+      for (const iso of visibleIsos) {
+        const feature = featureByIso.get(iso);
+        if (!feature) continue;
         const path = pathGenerator(feature);
+        if (!path) continue;
+        polys.push({
+          iso,
+          path,
+          demoCountries: demoByIso.get(iso) ?? [],
+        });
+      }
+
+      // Build flag entries (one per DEMO country)
+      const flags: FlagEntry[] = [];
+      for (const c of list) {
+        const iso = c.iso_numeric.padStart(3, "0");
+        const feature = featureByIso.get(iso);
+        if (!feature) continue;
         const polygonCentroid = pathGenerator.centroid(feature) as [
           number,
           number,
         ];
-
-        // Flag placement: override wins (UK sub-nations), otherwise projected centroid
-        let flagCenter: [number, number];
+        let flagCenter: [number, number] = polygonCentroid;
         if (c.flag_center) {
           const projected = projection(c.flag_center);
-          if (projected) {
-            flagCenter = projected as [number, number];
-          } else {
-            flagCenter = polygonCentroid;
-          }
-        } else {
-          flagCenter = polygonCentroid;
+          if (projected) flagCenter = projected as [number, number];
         }
-
-        if (
-          path &&
-          isFinite(polygonCentroid[0]) &&
-          isFinite(polygonCentroid[1])
-        ) {
-          rendered.push({
-            country: c,
-            path,
-            centroid: polygonCentroid,
-            flagCenter,
-          });
+        if (isFinite(flagCenter[0]) && isFinite(flagCenter[1])) {
+          flags.push({ country: c, flagCenter });
         }
       }
 
-      setRenderCountries(rendered);
+      setPolygonEntries(polys);
+      setFlagEntries(flags);
       setLoading(false);
     },
     []
   );
-
-  // Dedupe polygons by iso_numeric — UK sub-nations share "826"
-  const polygons = useMemo(() => {
-    const seen = new Set<string>();
-    const out: RenderCountry[] = [];
-    for (const r of renderCountries) {
-      if (seen.has(r.country.iso_numeric)) continue;
-      seen.add(r.country.iso_numeric);
-      out.push(r);
-    }
-    return out;
-  }, [renderCountries]);
 
   const viewBoxToPixel = useCallback(
     (vx: number, vy: number): { left: number; top: number } | null => {
@@ -311,42 +316,53 @@ export default function RetroMap({
             fill="url(#dither)"
           />
 
-          {/* Country polygons — PC Fútbol yellow/cream palette, dark earth borders */}
-          {polygons.map((rc) => {
-            const c = rc.country;
-            const hasClubs = activeSet.has(c.id);
-            const isSelected = c.id === selectedCountry;
-            const isHovered = c.id === hoveredId;
-            const isWiggling = c.id === wigglingId;
+          {/* Country polygons — PC Fútbol yellow/cream palette, dark earth borders.
+              Context countries (no DEMO entry) render fully inert as faded cream. */}
+          {polygonEntries.map((pe) => {
+            const countries = pe.demoCountries;
+            const isContext = countries.length === 0;
+            const hasClubs = countries.some((c) => activeSet.has(c.id));
+            const isSelected = countries.some((c) => c.id === selectedCountry);
+            const isHovered = countries.some((c) => c.id === hoveredId);
+            const isWiggling = countries.some((c) => c.id === wigglingId);
 
-            // Priority: selected > hover > active-default > inactive-default
+            // Priority: selected > hover(active only) > active/inactive default.
+            // Hover does NOT lift inactive countries — no false affordance.
             let fill = hasClubs ? "#E0C858" : "#C8B048";
-            if (isHovered) fill = "#FFE870";
             if (isSelected) fill = "#D4A843";
+            else if (isHovered && hasClubs) fill = "#FFE870";
+
+            // Representative country for handlers — UK uses first (England).
+            const rep = countries[0];
+            const onEnter = rep ? () => handleHoverEnter(rep) : undefined;
+            const onLeave = rep ? handleHoverLeave : undefined;
+            const onClick = rep ? () => handleCountryClick(rep) : undefined;
 
             return (
               <path
-                key={c.iso_numeric}
-                d={rc.path}
+                key={pe.iso}
+                d={pe.path}
                 className={isWiggling ? "animate-country-wiggle" : undefined}
                 fill={fill}
                 stroke="#8A7A50"
                 strokeWidth={1}
                 strokeLinejoin="round"
                 style={{
-                  cursor: "pointer",
+                  cursor: hasClubs ? "pointer" : "default",
                   transition: "fill 0.1s ease-out",
+                  pointerEvents: isContext ? "none" : "auto",
                 }}
-                onMouseEnter={() => handleHoverEnter(c)}
-                onMouseLeave={handleHoverLeave}
-                onPointerDown={() => handleCountryClick(c)}
-                role="button"
-                aria-label={c.name}
-                tabIndex={0}
+                onMouseEnter={onEnter}
+                onMouseLeave={onLeave}
+                onPointerDown={onClick}
+                role={isContext ? undefined : "button"}
+                aria-label={rep?.name}
+                tabIndex={isContext ? undefined : 0}
                 onKeyDown={(e) => {
+                  if (!onClick) return;
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    handleCountryClick(c);
+                    onClick();
                   }
                 }}
               />
@@ -354,15 +370,15 @@ export default function RetroMap({
           })}
         </svg>
 
-        {/* Flag badges — flag-icons CSS sprites, hard drop shadow, positioned over centroids or overrides */}
+        {/* Flag badges — flag-icons CSS sprites, hard drop shadow, one per DEMO country */}
         {svgRect &&
-          renderCountries.map((rc) => {
-            const c = rc.country;
+          flagEntries.map((fe) => {
+            const c = fe.country;
             const hasClubs = activeSet.has(c.id);
             const isSelected = c.id === selectedCountry;
             const isHovered = c.id === hoveredId;
 
-            const pos = viewBoxToPixel(rc.flagCenter[0], rc.flagCenter[1]);
+            const pos = viewBoxToPixel(fe.flagCenter[0], fe.flagCenter[1]);
             if (!pos) return null;
 
             return (
@@ -373,7 +389,7 @@ export default function RetroMap({
                   left: pos.left,
                   top: pos.top,
                   transform: "translate(-50%, -50%)",
-                  cursor: "pointer",
+                  cursor: hasClubs ? "pointer" : "default",
                   zIndex: isSelected ? 10 : isHovered ? 5 : 1,
                   pointerEvents: "auto",
                 }}
@@ -397,10 +413,10 @@ export default function RetroMap({
                       : "2px 2px 0 rgba(0,0,0,0.5)",
                     imageRendering: "pixelated",
                     filter:
-                      isHovered && !isSelected
+                      isHovered && !isSelected && hasClubs
                         ? "brightness(1.15)"
                         : "none",
-                    opacity: hasClubs ? 1 : 0.85,
+                    opacity: hasClubs ? 1 : 0.8,
                   }}
                 />
               </div>

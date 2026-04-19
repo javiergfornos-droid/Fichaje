@@ -13,79 +13,54 @@ interface MapPageClientProps {
   clubs: Club[];
 }
 
+type CtaIconId = "wallet" | "trophy" | "loupe" | "bolt";
+
 interface CtaConfig {
   id: string;
   title: string;
   sublabel: string;
   href: string;
-  position: React.CSSProperties;
+  gradient: string;
+  icon: CtaIconId;
   badge?: string;
 }
 
-const CTAS_BY_CONTINENT: Record<Continent, CtaConfig[]> = {
-  europe: [
-    {
-      id: "cartera",
-      title: "MI CARTERA DE FICHAJES",
-      sublabel: "TUS OJEADAS Y WISHLIST",
-      href: "/wishlist",
-      position: { top: "8%", left: "25%" },
-    },
-    {
-      id: "drops",
-      title: "DAILY DROPS",
-      sublabel: "PRÓXIMA CAÍDA EN 04H",
-      href: "/drops",
-      position: { top: "15%", right: "8%" },
-    },
-    {
-      id: "explorar",
-      title: "EXPLORAR TODO",
-      sublabel: "247 PIEZAS",
-      href: "/browse",
-      position: { bottom: "15%", right: "30%" },
-    },
-    {
-      id: "mundial",
-      title: "IR AL MUNDIAL",
-      sublabel: "SELECCIONES · USA/CAN/MEX 2026",
-      href: "/world-hype",
-      position: { top: "45%", left: "3%" },
-      badge: "NEW",
-    },
-  ],
-  americas: [
-    {
-      id: "cartera",
-      title: "MI CARTERA DE FICHAJES",
-      sublabel: "TUS OJEADAS Y WISHLIST",
-      href: "/wishlist",
-      position: { top: "15%", left: "5%" },
-    },
-    {
-      id: "drops",
-      title: "DAILY DROPS",
-      sublabel: "PRÓXIMA CAÍDA EN 04H",
-      href: "/drops",
-      position: { top: "65%", right: "8%" },
-    },
-    {
-      id: "explorar",
-      title: "EXPLORAR TODO",
-      sublabel: "247 PIEZAS",
-      href: "/browse",
-      position: { bottom: "25%", left: "10%" },
-    },
-    {
-      id: "mundial",
-      title: "IR AL MUNDIAL",
-      sublabel: "SELECCIONES · USA/CAN/MEX 2026",
-      href: "/world-hype",
-      position: { top: "40%", right: "3%" },
-      badge: "NEW",
-    },
-  ],
-};
+/** Ordered top → bottom, identical in both continents. */
+const CTAS: CtaConfig[] = [
+  {
+    id: "cartera",
+    title: "MI CARTERA DE FICHAJES",
+    sublabel: "TUS OJEADAS Y WISHLIST",
+    href: "/wishlist",
+    gradient: "linear-gradient(180deg, #2A3A6E, #1A2A5E)",
+    icon: "wallet",
+  },
+  {
+    id: "mundial",
+    title: "IR AL MUNDIAL",
+    sublabel: "SELECCIONES · USA/CAN/MEX 2026",
+    href: "/world-hype",
+    gradient: "linear-gradient(180deg, #3A4A7E, #2A3A6E)",
+    icon: "trophy",
+    badge: "NEW",
+  },
+  {
+    id: "explorar",
+    title: "EXPLORAR TODO",
+    sublabel: "247 PIEZAS",
+    href: "/browse",
+    gradient: "linear-gradient(180deg, #1E2A5E, #0F1A3E)",
+    icon: "loupe",
+  },
+  {
+    id: "drops",
+    title: "DAILY DROPS",
+    sublabel: "PRÓXIMA CAÍDA EN 04H",
+    href: "/drops",
+    gradient: "linear-gradient(180deg, #3A4A7E, #2A3A6E)",
+    icon: "bolt",
+  },
+];
 
 const CLUB_COUNT_BY_COUNTRY_DEFAULT = 0;
 
@@ -129,8 +104,6 @@ export default function MapPageClient({ countries, clubs }: MapPageClientProps) 
   const handleInactiveClick = (country: Country) => {
     setInactiveMessage(`SIN CAMISETAS DE ${country.name}`);
   };
-
-  const ctaList = CTAS_BY_CONTINENT[continent];
 
   // Onboarding bar state resolution: inactive-message wins, then hover on active, otherwise default
   const onboardingState = useMemo(() => {
@@ -320,10 +293,25 @@ export default function MapPageClient({ countries, clubs }: MapPageClientProps) 
             Temporada 1996/97
           </div>
 
-          {/* Floating CTAs — per-continent, positioned over water / empty areas */}
-          {ctaList.map((cta) => (
-            <CtaFloat key={cta.id} cta={cta} />
-          ))}
+          {/* Floating CTAs — vertical column over the ocean: Atlántico izquierdo (EU)
+              or Atlántico derecho (SA). Same order, size and spacing on both continents. */}
+          <div
+            style={{
+              position: "absolute",
+              top: "8%",
+              bottom: "15%",
+              [continent === "europe" ? "left" : "right"]: "2.5%",
+              width: 180,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              zIndex: 15,
+            }}
+          >
+            {CTAS.map((cta) => (
+              <CtaButton key={cta.id} cta={cta} />
+            ))}
+          </div>
         </div>
 
         {/* Onboarding bar — 90px, below map, full width of map column */}
@@ -334,12 +322,11 @@ export default function MapPageClient({ countries, clubs }: MapPageClientProps) 
 }
 
 /**
- * Floating menu button — PC Fútbol style beveled box on the map surface.
- * Compact (160×84) so it fits over water without encroaching on landmass.
+ * Vertical-column CTA button — PC Fútbol style beveled 180×80 box with pixel icon + label + sublabel.
  */
-function CtaFloat({ cta }: { cta: CtaConfig }) {
+function CtaButton({ cta }: { cta: CtaConfig }) {
   return (
-    <div style={{ position: "absolute", ...cta.position, zIndex: 15 }}>
+    <div style={{ position: "relative" }}>
       {cta.badge && (
         <span
           aria-hidden
@@ -368,20 +355,17 @@ function CtaFloat({ cta }: { cta: CtaConfig }) {
         style={{
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 160,
-          height: 84,
+          justifyContent: "space-between",
+          width: 180,
+          height: 80,
+          padding: 12,
           borderWidth: 3,
           borderStyle: "outset",
           borderColor: "#4A5A8E",
-          background: "linear-gradient(180deg, #1E2A5E, #2A3A6E)",
+          background: cta.gradient,
           boxShadow: "3px 3px 0 rgba(0,0,0,0.45)",
           textDecoration: "none",
           color: "#D4A843",
-          padding: 6,
-          gap: 4,
-          cursor: "pointer",
           overflow: "hidden",
           position: "relative",
           transition: "filter 0.12s, transform 0.12s",
@@ -408,32 +392,45 @@ function CtaFloat({ cta }: { cta: CtaConfig }) {
             pointerEvents: "none",
           }}
         />
-        <span
+        {/* Row 1: pixel icon + title */}
+        <div
           style={{
             position: "relative",
-            fontFamily: "var(--font-oswald), sans-serif",
-            fontWeight: 700,
-            fontSize: "14px",
-            letterSpacing: "1.5px",
-            textTransform: "uppercase",
-            color: "#D4A843",
-            textShadow: "1px 1px 0 rgba(0,0,0,0.55)",
-            lineHeight: 1.05,
-            textAlign: "center",
-            padding: "0 4px",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            minWidth: 0,
           }}
         >
-          {cta.title}
-        </span>
+          <CtaIcon icon={cta.icon} />
+          <span
+            style={{
+              fontFamily: "var(--font-oswald), sans-serif",
+              fontWeight: 700,
+              fontSize: "13px",
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              color: "#D4A843",
+              textShadow: "1px 1px 0 rgba(0,0,0,0.55)",
+              lineHeight: 1.05,
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            {cta.title}
+          </span>
+        </div>
+        {/* Row 2: sublabel */}
         <span
           style={{
             position: "relative",
-            fontFamily: "var(--font-vt323), monospace",
-            fontSize: "12px",
-            letterSpacing: "1px",
-            color: "#8AA0C8",
+            fontFamily: "var(--font-jetbrains), monospace",
+            fontSize: "10px",
+            letterSpacing: "0.5px",
+            color: "#F5F0E8",
+            opacity: 0.75,
             textTransform: "uppercase",
-            textAlign: "center",
+            lineHeight: 1,
           }}
         >
           {cta.sublabel}
@@ -441,6 +438,80 @@ function CtaFloat({ cta }: { cta: CtaConfig }) {
       </Link>
     </div>
   );
+}
+
+/** Inline 16×16 pixel-art icons for the CTAs — gold silhouette, no anti-aliasing. */
+function CtaIcon({ icon }: { icon: CtaIconId }) {
+  const GOLD = "#D4A843";
+  const SHADOW = "#1A2A5E";
+  const common = {
+    width: 16,
+    height: 16,
+    viewBox: "0 0 16 16",
+    shapeRendering: "crispEdges" as const,
+    style: { flexShrink: 0, imageRendering: "pixelated" as const },
+    "aria-hidden": true,
+  };
+  switch (icon) {
+    case "wallet":
+      return (
+        <svg {...common}>
+          <g fill={GOLD}>
+            <rect x="2" y="4" width="12" height="9" />
+          </g>
+          <g fill={SHADOW}>
+            <rect x="4" y="6" width="8" height="1" />
+            <rect x="4" y="8" width="8" height="1" />
+            <rect x="4" y="10" width="5" height="1" />
+          </g>
+        </svg>
+      );
+    case "trophy":
+      return (
+        <svg {...common}>
+          <g fill={GOLD}>
+            {/* Cup body */}
+            <rect x="4" y="2" width="8" height="5" />
+            {/* Cup bottom rim */}
+            <rect x="5" y="7" width="6" height="1" />
+            {/* Stem */}
+            <rect x="7" y="8" width="2" height="3" />
+            {/* Base */}
+            <rect x="4" y="11" width="8" height="2" />
+          </g>
+        </svg>
+      );
+    case "loupe":
+      return (
+        <svg {...common}>
+          <g fill={GOLD}>
+            {/* Hollow ring */}
+            <rect x="2" y="2" width="8" height="1" />
+            <rect x="2" y="8" width="8" height="1" />
+            <rect x="2" y="2" width="1" height="7" />
+            <rect x="9" y="2" width="1" height="7" />
+            {/* Diagonal handle */}
+            <rect x="10" y="9" width="2" height="2" />
+            <rect x="11" y="10" width="2" height="2" />
+            <rect x="12" y="11" width="2" height="2" />
+            <rect x="13" y="12" width="2" height="2" />
+          </g>
+        </svg>
+      );
+    case "bolt":
+      return (
+        <svg {...common}>
+          <g fill={GOLD}>
+            <rect x="8" y="1" width="3" height="2" />
+            <rect x="6" y="3" width="3" height="2" />
+            <rect x="4" y="5" width="5" height="2" />
+            <rect x="7" y="7" width="4" height="2" />
+            <rect x="5" y="9" width="3" height="2" />
+            <rect x="3" y="11" width="3" height="2" />
+          </g>
+        </svg>
+      );
+  }
 }
 
 interface OnboardingState {
