@@ -281,6 +281,7 @@ export default function MapShell({ children }: MapShellProps) {
                 onActiveClick={handleActiveClick}
                 onInactiveClick={handleInactiveClick}
                 onHoverCountry={setHoveredCountry}
+                showFlags={state === "default"}
               />
 
               {/* Date-clock — top-left corner, inside the map frame.

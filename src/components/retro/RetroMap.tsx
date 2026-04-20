@@ -30,6 +30,8 @@ interface RetroMapProps {
   onActiveClick: (country: Country) => void;
   onInactiveClick: (country: Country) => void;
   onHoverCountry?: (country: Country | null) => void;
+  /** Hide the flag badges (for contracted-map states where flags leak onto the ocean). */
+  showFlags?: boolean;
 }
 
 const SVG_WIDTH = 800;
@@ -58,6 +60,7 @@ export default function RetroMap({
   onActiveClick,
   onInactiveClick,
   onHoverCountry,
+  showFlags = true,
 }: RetroMapProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [wigglingId, setWigglingId] = useState<string | null>(null);
@@ -344,13 +347,16 @@ export default function RetroMap({
                 d={pe.path}
                 className={isWiggling ? "animate-country-wiggle" : undefined}
                 fill={fill}
-                stroke="#8A7A50"
-                strokeWidth={1}
+                stroke={isSelected ? "#6E5418" : "#8A7A50"}
+                strokeWidth={isSelected ? 2.5 : 1}
                 strokeLinejoin="round"
                 style={{
                   cursor: hasClubs ? "pointer" : "default",
                   transition: "fill 0.1s ease-out",
                   pointerEvents: isContext ? "none" : "auto",
+                  filter: isSelected
+                    ? "drop-shadow(0 0 4px rgba(212,168,67,0.8))"
+                    : undefined,
                 }}
                 onMouseEnter={onEnter}
                 onMouseLeave={onLeave}
@@ -370,8 +376,11 @@ export default function RetroMap({
           })}
         </svg>
 
-        {/* Flag badges — flag-icons CSS sprites, hard drop shadow, one per DEMO country */}
-        {svgRect &&
+        {/* Flag badges — flag-icons CSS sprites, hard drop shadow, one per DEMO country.
+            Hidden when `showFlags` is false (contracted-map states) so flags don't
+            scatter over the ocean/other countries. */}
+        {showFlags &&
+          svgRect &&
           flagEntries.map((fe) => {
             const c = fe.country;
             const hasClubs = activeSet.has(c.id);
