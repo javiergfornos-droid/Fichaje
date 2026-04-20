@@ -88,17 +88,83 @@ function conditionLabel(v: number): string {
 }
 
 // ─── 8-bit pixel sprites (rect-based, no anti-aliasing) ────
-function PixelHeart({ size = 16, color = GOLD }: { size?: number; color?: string }) {
+
+/** Coin with € — for the BUY NOW CTA. 24x24. */
+function PixelCoinEuro({ size = 24, color = "#1A1A1A" }: { size?: number; color?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden>
-      <g fill={color}>
-        <rect x={2} y={4} width={4} height={2} />
-        <rect x={10} y={4} width={4} height={2} />
-        <rect x={1} y={6} width={14} height={2} />
-        <rect x={2} y={8} width={12} height={2} />
-        <rect x={3} y={10} width={10} height={2} />
-        <rect x={5} y={12} width={6} height={2} />
-        <rect x={7} y={14} width={2} height={1} />
+    <svg width={size} height={size} viewBox="0 0 24 24" shapeRendering="crispEdges" aria-hidden>
+      <g fill={color} style={{ imageRendering: "pixelated" }}>
+        {/* Coin ring (outline only, approximate circle) */}
+        <rect x={8} y={2} width={8} height={2} />
+        <rect x={6} y={4} width={2} height={2} />
+        <rect x={16} y={4} width={2} height={2} />
+        <rect x={4} y={6} width={2} height={4} />
+        <rect x={18} y={6} width={2} height={4} />
+        <rect x={2} y={10} width={2} height={4} />
+        <rect x={20} y={10} width={2} height={4} />
+        <rect x={4} y={14} width={2} height={4} />
+        <rect x={18} y={14} width={2} height={4} />
+        <rect x={6} y={18} width={2} height={2} />
+        <rect x={16} y={18} width={2} height={2} />
+        <rect x={8} y={20} width={8} height={2} />
+        {/* Euro symbol inside */}
+        <rect x={10} y={6} width={4} height={2} />
+        <rect x={8} y={8} width={2} height={2} />
+        <rect x={8} y={10} width={6} height={2} />
+        <rect x={8} y={12} width={2} height={2} />
+        <rect x={8} y={14} width={6} height={2} />
+        <rect x={8} y={16} width={2} height={2} />
+        <rect x={10} y={18} width={4} height={2} />
+      </g>
+    </svg>
+  );
+}
+
+/** Paper with double horizontal arrow — for the MAKE OFFER CTA. 28x28. */
+function PixelOfferPaper({ size = 28, color = "#1A1A1A" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 28 28" shapeRendering="crispEdges" aria-hidden>
+      <g fill={color} style={{ imageRendering: "pixelated" }}>
+        {/* Paper outline */}
+        <rect x={4} y={2} width={20} height={2} />
+        <rect x={4} y={24} width={20} height={2} />
+        <rect x={4} y={4} width={2} height={20} />
+        <rect x={22} y={4} width={2} height={20} />
+        {/* Top decorative line */}
+        <rect x={7} y={7} width={10} height={2} />
+        {/* Double arrow ← shaft → */}
+        <rect x={6} y={14} width={2} height={2} />
+        <rect x={8} y={12} width={2} height={2} />
+        <rect x={8} y={16} width={2} height={2} />
+        <rect x={8} y={14} width={12} height={2} />
+        <rect x={20} y={14} width={2} height={2} />
+        <rect x={18} y={12} width={2} height={2} />
+        <rect x={18} y={16} width={2} height={2} />
+        {/* Bottom decorative line */}
+        <rect x={7} y={20} width={8} height={2} />
+      </g>
+    </svg>
+  );
+}
+
+/** Binoculars — for the WISHLIST / SCOUT CTA. 20x20. */
+function PixelBinoculars({ size = 20, color = GOLD }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" shapeRendering="crispEdges" aria-hidden>
+      <g fill={color} style={{ imageRendering: "pixelated" }}>
+        {/* Left eyepiece — hollow square */}
+        <rect x={2} y={4} width={6} height={2} />
+        <rect x={2} y={6} width={2} height={8} />
+        <rect x={6} y={6} width={2} height={8} />
+        <rect x={2} y={14} width={6} height={2} />
+        {/* Right eyepiece — hollow square */}
+        <rect x={12} y={4} width={6} height={2} />
+        <rect x={12} y={6} width={2} height={8} />
+        <rect x={16} y={6} width={2} height={8} />
+        <rect x={12} y={14} width={6} height={2} />
+        {/* Bridge between eyepieces */}
+        <rect x={8} y={8} width={4} height={2} />
+        <rect x={8} y={10} width={4} height={2} />
       </g>
     </svg>
   );
@@ -582,7 +648,7 @@ export default function ShirtPageClient({
   countryName,
   backHref,
 }: ShirtPageClientProps) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const price = shirt.price_cents;
   const media = getShirtMedia(shirt);
   const mediaColor = statBarColor(media);
@@ -1103,39 +1169,55 @@ export default function ShirtPageClient({
               </div>
             </div>
 
-            {/* SUB 4.5 — Price */}
+            {/* SUB 4.5 — Price + PAGAR TRASPASO button */}
             <div
               style={{
                 marginTop: 12,
                 background: "#0A0A0A",
                 ...bevelOutset(3),
                 padding: "20px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
               }}
             >
-              <div
-                style={{
-                  fontFamily: "var(--font-bebas-neue), sans-serif",
-                  fontSize: 52,
-                  color: GOLD,
-                  fontWeight: 700,
-                  letterSpacing: 2,
-                  lineHeight: 1,
-                }}
-              >
-                {formatEuro(price)}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-bebas-neue), sans-serif",
+                    fontSize: 52,
+                    color: GOLD,
+                    fontWeight: 700,
+                    letterSpacing: 2,
+                    lineHeight: 1,
+                  }}
+                >
+                  {formatEuro(price)}
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    fontFamily: "var(--font-press-start), monospace",
+                    fontSize: 9,
+                    color: CREAM,
+                    opacity: 0.7,
+                    letterSpacing: 1,
+                  }}
+                >
+                  IVA INCLUIDO · PIEZA ÚNICA
+                </div>
               </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontFamily: "var(--font-press-start), monospace",
-                  fontSize: 9,
-                  color: CREAM,
-                  opacity: 0.7,
-                  letterSpacing: 1,
-                }}
-              >
-                IVA INCLUIDO · PIEZA ÚNICA
-              </div>
+
+              <GoldCta
+                label={t("shirt.cta.buy_now")}
+                hint={t("shirt.cta.buy_now_hint")}
+                icon={<PixelCoinEuro size={24} color="#1A1A1A" />}
+                onClick={onBuyClick}
+                height={64}
+                labelSize={22}
+                width={200}
+                flashing={flash}
+              />
             </div>
 
             {/* SUB 4.6 — Offer section */}
@@ -1232,20 +1314,6 @@ export default function ShirtPageClient({
                   >
                     ►
                   </button>
-                  <button
-                    type="button"
-                    onClick={onSubmitOffer}
-                    aria-label="Enviar oferta"
-                    style={{
-                      ...arrowBtnStyle,
-                      width: "auto",
-                      padding: "0 10px",
-                      fontFamily: "var(--font-press-start), monospace",
-                      fontSize: 9,
-                    }}
-                  >
-                    OK
-                  </button>
                 </OfferRow>
 
                 <OfferRow label="PRECIO DE LISTA" bg={OFFER_ORANGE}>
@@ -1274,86 +1342,31 @@ export default function ShirtPageClient({
                   </span>
                 </OfferRow>
               </div>
+
+              {/* HACER OFERTA — primary CTA inside OFERTA panel */}
+              <div style={{ marginTop: 12 }}>
+                <GoldCta
+                  label={t("shirt.cta.make_offer")}
+                  hint={t("shirt.cta.make_offer_hint")}
+                  icon={<PixelOfferPaper size={28} color="#1A1A1A" />}
+                  onClick={onSubmitOffer}
+                  height={72}
+                  labelSize={26}
+                  width="100%"
+                />
+              </div>
             </div>
 
-            {/* SUB 4.7 — CTAs */}
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              <button
-                type="button"
-                onClick={onBuyClick}
-                style={{
-                  height: 64,
-                  width: "100%",
-                  background: "linear-gradient(180deg, #E8C840, #C4A030)",
-                  borderWidth: 3,
-                  borderStyle: "solid",
-                  borderTopColor: "#F8E880",
-                  borderLeftColor: "#F8E880",
-                  borderRightColor: "#907020",
-                  borderBottomColor: "#907020",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-bebas-neue), sans-serif",
-                  fontSize: 28,
-                  fontWeight: 700,
-                  color: BLACK,
-                  letterSpacing: 5,
-                  textTransform: "uppercase",
-                  boxShadow: flash
-                    ? "inset 0 0 0 9999px rgba(255,255,255,0.75)"
-                    : "3px 3px 0 rgba(0,0,0,0.4)",
-                  transition: "box-shadow 120ms",
-                }}
-                onMouseDown={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background =
-                    "linear-gradient(0deg, #E8C840, #C4A030)";
-                }}
-                onMouseUp={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background =
-                    "linear-gradient(180deg, #E8C840, #C4A030)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background =
-                    "linear-gradient(180deg, #E8C840, #C4A030)";
-                }}
-              >
-                FICHAR
-              </button>
-
-              <button
-                type="button"
+            {/* SUB 4.7 — MANDAR UN OJEADOR (wishlist, tertiary) */}
+            <div style={{ marginTop: 12 }}>
+              <GhostCta
+                label={t("shirt.cta.wishlist")}
+                hint={t("shirt.cta.wishlist_hint")}
+                icon={<PixelBinoculars size={20} color={GOLD} />}
                 onClick={onWishlistClick}
-                style={{
-                  height: 48,
-                  width: "100%",
-                  background: "transparent",
-                  borderWidth: 2,
-                  borderStyle: "solid",
-                  borderTopColor: "#A8A8A8",
-                  borderLeftColor: "#A8A8A8",
-                  borderRightColor: "#606060",
-                  borderBottomColor: "#606060",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  cursor: "pointer",
-                  fontFamily: "var(--font-oswald), sans-serif",
-                  fontSize: 16,
-                  color: "#E8DCC8",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "#3A3A3A";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                }}
-              >
-                <PixelHeart size={16} color={GOLD} />
-                AL WISHLIST
-              </button>
+                height={56}
+                labelSize={18}
+              />
             </div>
 
             {/* SUB 4.8 — Trust badges */}
@@ -1475,3 +1488,209 @@ const arrowBtnStyle: React.CSSProperties = {
   lineHeight: 1,
   padding: 0,
 };
+
+// ─── CTA buttons (label + hint + pixel icon) ───────────────
+
+/** Two-line CTA label block (used inside both gold + ghost variants). */
+function CtaBody({
+  icon,
+  label,
+  hint,
+  labelSize,
+  labelColor,
+  hintColor,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  hint: string;
+  labelSize: number;
+  labelColor: string;
+  hintColor: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 12,
+        width: "100%",
+        height: "100%",
+        padding: "0 12px",
+      }}
+    >
+      <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+        {icon}
+      </span>
+      <span
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          lineHeight: 1,
+          minWidth: 0,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-bebas-neue), sans-serif",
+            fontSize: labelSize,
+            fontWeight: 700,
+            color: labelColor,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            lineHeight: 1,
+          }}
+        >
+          {label}
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--font-vt323), monospace",
+            fontSize: 12,
+            color: labelColor,
+            opacity: 0.75,
+            letterSpacing: 0.5,
+            textTransform: "lowercase",
+            lineHeight: 1,
+            marginTop: 4,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            maxWidth: "100%",
+          }}
+        >
+          ({hint})
+        </span>
+        {/* hintColor applied via inherited color + opacity — kept here for API symmetry */}
+        <span style={{ display: "none" }} aria-hidden>
+          {hintColor}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/** Gold gradient primary CTA — PAGAR TRASPASO / HACER OFERTA. */
+function GoldCta({
+  label,
+  hint,
+  icon,
+  onClick,
+  height,
+  labelSize,
+  width = "100%",
+  flashing = false,
+}: {
+  label: string;
+  hint: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  height: number;
+  labelSize: number;
+  width?: number | string;
+  flashing?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        height,
+        width,
+        background: "linear-gradient(180deg, #E8C840, #C4A030)",
+        borderWidth: 3,
+        borderStyle: "solid",
+        borderTopColor: "#F8E880",
+        borderLeftColor: "#F8E880",
+        borderRightColor: "#907020",
+        borderBottomColor: "#907020",
+        cursor: "pointer",
+        color: "#1A1A1A",
+        padding: 0,
+        boxShadow: flashing
+          ? "inset 0 0 0 9999px rgba(255,255,255,0.75)"
+          : "3px 3px 0 rgba(0,0,0,0.4)",
+        transition: "box-shadow 120ms",
+        flexShrink: 0,
+      }}
+      onMouseDown={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background =
+          "linear-gradient(0deg, #E8C840, #C4A030)";
+      }}
+      onMouseUp={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background =
+          "linear-gradient(180deg, #E8C840, #C4A030)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background =
+          "linear-gradient(180deg, #E8C840, #C4A030)";
+      }}
+    >
+      <CtaBody
+        icon={icon}
+        label={label}
+        hint={hint}
+        labelSize={labelSize}
+        labelColor="#1A1A1A"
+        hintColor="#1A1A1A"
+      />
+    </button>
+  );
+}
+
+/** Ghost transparent CTA — MANDAR UN OJEADOR. */
+function GhostCta({
+  label,
+  hint,
+  icon,
+  onClick,
+  height,
+  labelSize,
+}: {
+  label: string;
+  hint: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  height: number;
+  labelSize: number;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        height,
+        width: "100%",
+        background: "transparent",
+        borderWidth: 2,
+        borderStyle: "solid",
+        borderTopColor: "#A8A8A8",
+        borderLeftColor: "#A8A8A8",
+        borderRightColor: "#606060",
+        borderBottomColor: "#606060",
+        color: "#E8DCC8",
+        cursor: "pointer",
+        padding: 0,
+        transition: "background 100ms",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background = "#3A3A3A";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+      }}
+    >
+      <CtaBody
+        icon={icon}
+        label={label}
+        hint={hint}
+        labelSize={labelSize}
+        labelColor="#E8DCC8"
+        hintColor="#E8DCC8"
+      />
+    </button>
+  );
+}

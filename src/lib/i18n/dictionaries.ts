@@ -65,6 +65,13 @@ export type TranslationKey =
   | "pdp.recentlyViewed"
   | "pdp.faqTitle"
   | "pdp.authNote"
+  // Shirt (retro ficha) CTAs
+  | "shirt.cta.buy_now"
+  | "shirt.cta.buy_now_hint"
+  | "shirt.cta.make_offer"
+  | "shirt.cta.make_offer_hint"
+  | "shirt.cta.wishlist"
+  | "shirt.cta.wishlist_hint"
   // Shipping
   | "shipping.title"
   | "shipping.speed"
@@ -235,6 +242,13 @@ const es: Dictionary = {
   "pdp.faqTitle": "Preguntas frecuentes",
   "pdp.authNote": "Todas las piezas pasan por un proceso de autenticación y evaluación de estado antes de entrar al mercado.",
 
+  "shirt.cta.buy_now": "PAGAR TRASPASO",
+  "shirt.cta.buy_now_hint": "Comprar ya al precio marcado",
+  "shirt.cta.make_offer": "HACER OFERTA",
+  "shirt.cta.make_offer_hint": "Pide bajar el precio",
+  "shirt.cta.wishlist": "MANDAR UN OJEADOR",
+  "shirt.cta.wishlist_hint": "Guardar en wishlist para seguir la pieza",
+
   "shipping.title": "Envío y garantías",
   "shipping.speed": "Envío 24-48h — España peninsular. Gratis en pedidos superiores a 500 €.",
   "shipping.returns": "Devoluciones 14 días — Reembolso íntegro si no es lo que esperabas.",
@@ -402,6 +416,13 @@ const en: Dictionary = {
   "pdp.recentlyViewed": "Recently viewed",
   "pdp.faqTitle": "Frequently asked",
   "pdp.authNote": "Every piece goes through authentication and condition assessment before hitting the marketplace.",
+
+  "shirt.cta.buy_now": "BUY NOW",
+  "shirt.cta.buy_now_hint": "Buy now at list price",
+  "shirt.cta.make_offer": "MAKE AN OFFER",
+  "shirt.cta.make_offer_hint": "Request a lower price",
+  "shirt.cta.wishlist": "SEND A SCOUT",
+  "shirt.cta.wishlist_hint": "Save to wishlist to track this piece",
 
   "shipping.title": "Shipping & guarantees",
   "shipping.speed": "24–48h shipping within mainland Spain. Free on orders over €500.",
