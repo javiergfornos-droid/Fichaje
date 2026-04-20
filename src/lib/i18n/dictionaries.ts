@@ -72,6 +72,64 @@ export type TranslationKey =
   | "shirt.cta.make_offer_hint"
   | "shirt.cta.wishlist"
   | "shirt.cta.wishlist_hint"
+  // Shirt — types
+  | "shirt.type.local"
+  | "shirt.type.away"
+  | "shirt.type.third"
+  | "shirt.type.goalkeeper"
+  | "shirt.type.sweatshirt"
+  // Shirt — breadcrumb
+  | "shirt.breadcrumb.home"
+  | "shirt.breadcrumb.shirts"
+  | "shirt.back_to_map"
+  // Shirt — attribute labels
+  | "shirt.attributes.year"
+  | "shirt.attributes.type"
+  | "shirt.attributes.size"
+  | "shirt.attributes.brand"
+  | "shirt.attributes.competition"
+  | "shirt.attributes.condition_label"
+  // Shirt — condition values
+  | "shirt.condition.excellent"
+  | "shirt.condition.very_good"
+  | "shirt.condition.good"
+  // Shirt — status badges
+  | "shirt.badges.unique_piece"
+  | "shirt.badges.match_worn"
+  | "shirt.badges.kitlegit_certified"
+  // Shirt — stats panel
+  | "shirt.stats.title"
+  | "shirt.stats.condition"
+  | "shirt.stats.color"
+  | "shirt.stats.integrity"
+  | "shirt.stats.iconicity"
+  | "shirt.stats.avg"
+  // Shirt — price
+  | "shirt.price.vat_included"
+  // Shirt — vertical label
+  | "shirt.labels.info"
+  // Shirt — offer panel
+  | "shirt.offer.label"
+  | "shirt.offer.your_offer"
+  | "shirt.offer.list_price"
+  | "shirt.offer.shipping_approx"
+  | "shirt.offer.spain"
+  | "shirt.offer.director_message"
+  // Shirt — photos
+  | "shirt.photos.no_photo"
+  | "shirt.photos.label"
+  | "shirt.photos.viewing"
+  // Shirt — trust badges
+  | "shirt.trust.shipping"
+  | "shirt.trust.returns"
+  | "shirt.trust.authenticity"
+  | "shirt.trust.kitlegit"
+  // Shirt — accordions
+  | "shirt.accordion.description"
+  | "shirt.accordion.about_season"
+  | "shirt.accordion.club_history"
+  | "shirt.accordion.about_season_body"
+  | "shirt.accordion.club_history_body"
   // Shipping
   | "shipping.title"
   | "shipping.speed"
@@ -249,6 +307,66 @@ const es: Dictionary = {
   "shirt.cta.wishlist": "MANDAR UN OJEADOR",
   "shirt.cta.wishlist_hint": "Guardar en wishlist para seguir la pieza",
 
+  "shirt.type.local": "LOCAL",
+  "shirt.type.away": "VISITANTE",
+  "shirt.type.third": "TERCERA",
+  "shirt.type.goalkeeper": "PORTERO",
+  "shirt.type.sweatshirt": "SUDADERA",
+
+  "shirt.breadcrumb.home": "INICIO",
+  "shirt.breadcrumb.shirts": "CAMISETAS",
+  "shirt.back_to_map": "VOLVER AL MAPA",
+
+  "shirt.attributes.year": "AÑO",
+  "shirt.attributes.type": "TIPO",
+  "shirt.attributes.size": "TALLA",
+  "shirt.attributes.brand": "MARCA",
+  "shirt.attributes.competition": "COMPETICIÓN",
+  "shirt.attributes.condition_label": "CONDICIÓN",
+
+  "shirt.condition.excellent": "EXCELENTE",
+  "shirt.condition.very_good": "MUY BUENA",
+  "shirt.condition.good": "BUENA",
+
+  "shirt.badges.unique_piece": "PIEZA ÚNICA",
+  "shirt.badges.match_worn": "MATCH WORN",
+  "shirt.badges.kitlegit_certified": "CERTIFICADO KITLEGIT",
+
+  "shirt.stats.title": "STATS",
+  "shirt.stats.condition": "CONDICIÓN",
+  "shirt.stats.color": "COLOR",
+  "shirt.stats.integrity": "INTEGRIDAD",
+  "shirt.stats.iconicity": "ICONICIDAD",
+  "shirt.stats.avg": "MEDIA",
+
+  "shirt.price.vat_included": "IVA INCLUIDO",
+
+  "shirt.labels.info": "INFORMACIÓN DE LA CAMISETA",
+
+  "shirt.offer.label": "OFERTA",
+  "shirt.offer.your_offer": "TU OFERTA",
+  "shirt.offer.list_price": "PRECIO DE LISTA",
+  "shirt.offer.shipping_approx": "ENVÍO APROX.",
+  "shirt.offer.spain": "ESPAÑA",
+  "shirt.offer.director_message": "DIRECTOR DEPORTIVO: ESA OFERTA NO HAY POR DÓNDE COGERLA",
+
+  "shirt.photos.no_photo": "SIN FOTO DISPONIBLE",
+  "shirt.photos.label": "FOTOS DE LA PIEZA",
+  "shirt.photos.viewing": "VISUALIZANDO IMAGEN",
+
+  "shirt.trust.shipping": "ENVÍO 24-48H",
+  "shirt.trust.returns": "DEVOL. 14 DÍAS",
+  "shirt.trust.authenticity": "AUTENTICIDAD",
+  "shirt.trust.kitlegit": "KITLEGIT",
+
+  "shirt.accordion.description": "DESCRIPCIÓN",
+  "shirt.accordion.about_season": "SOBRE LA TEMPORADA",
+  "shirt.accordion.club_history": "HISTORIAL DEL CLUB",
+  "shirt.accordion.about_season_body":
+    "Esta pieza corresponde a la temporada {season}. La información detallada sobre esta temporada estará disponible próximamente.",
+  "shirt.accordion.club_history_body":
+    "Próximamente incluiremos información sobre el palmarés y hitos del {club} durante esta época.",
+
   "shipping.title": "Envío y garantías",
   "shipping.speed": "Envío 24-48h — España peninsular. Gratis en pedidos superiores a 500 €.",
   "shipping.returns": "Devoluciones 14 días — Reembolso íntegro si no es lo que esperabas.",
@@ -423,6 +541,66 @@ const en: Dictionary = {
   "shirt.cta.make_offer_hint": "Request a lower price",
   "shirt.cta.wishlist": "SEND A SCOUT",
   "shirt.cta.wishlist_hint": "Save to wishlist to track this piece",
+
+  "shirt.type.local": "HOME",
+  "shirt.type.away": "AWAY",
+  "shirt.type.third": "THIRD",
+  "shirt.type.goalkeeper": "GOALKEEPER",
+  "shirt.type.sweatshirt": "SWEATSHIRT",
+
+  "shirt.breadcrumb.home": "HOME",
+  "shirt.breadcrumb.shirts": "SHIRTS",
+  "shirt.back_to_map": "BACK TO MAP",
+
+  "shirt.attributes.year": "YEAR",
+  "shirt.attributes.type": "TYPE",
+  "shirt.attributes.size": "SIZE",
+  "shirt.attributes.brand": "BRAND",
+  "shirt.attributes.competition": "COMPETITION",
+  "shirt.attributes.condition_label": "CONDITION",
+
+  "shirt.condition.excellent": "EXCELLENT",
+  "shirt.condition.very_good": "VERY GOOD",
+  "shirt.condition.good": "GOOD",
+
+  "shirt.badges.unique_piece": "UNIQUE PIECE",
+  "shirt.badges.match_worn": "MATCH WORN",
+  "shirt.badges.kitlegit_certified": "KITLEGIT CERTIFIED",
+
+  "shirt.stats.title": "STATS",
+  "shirt.stats.condition": "CONDITION",
+  "shirt.stats.color": "COLOR",
+  "shirt.stats.integrity": "INTEGRITY",
+  "shirt.stats.iconicity": "ICONICITY",
+  "shirt.stats.avg": "AVG",
+
+  "shirt.price.vat_included": "VAT INCLUDED",
+
+  "shirt.labels.info": "SHIRT INFORMATION",
+
+  "shirt.offer.label": "OFFER",
+  "shirt.offer.your_offer": "YOUR OFFER",
+  "shirt.offer.list_price": "LIST PRICE",
+  "shirt.offer.shipping_approx": "SHIPPING APPROX.",
+  "shirt.offer.spain": "SPAIN",
+  "shirt.offer.director_message": "SPORTS DIRECTOR: THAT OFFER IS NOT EVEN CLOSE",
+
+  "shirt.photos.no_photo": "NO PHOTO AVAILABLE",
+  "shirt.photos.label": "SHIRT PHOTOS",
+  "shirt.photos.viewing": "VIEWING IMAGE",
+
+  "shirt.trust.shipping": "SHIPPING 24-48H",
+  "shirt.trust.returns": "RETURNS 14 DAYS",
+  "shirt.trust.authenticity": "AUTHENTICITY",
+  "shirt.trust.kitlegit": "KITLEGIT",
+
+  "shirt.accordion.description": "DESCRIPTION",
+  "shirt.accordion.about_season": "ABOUT THE SEASON",
+  "shirt.accordion.club_history": "CLUB HISTORY",
+  "shirt.accordion.about_season_body":
+    "This piece corresponds to the {season} season. Detailed information about this season will be available soon.",
+  "shirt.accordion.club_history_body":
+    "Club history and honours during {club}'s era of this shirt coming soon.",
 
   "shipping.title": "Shipping & guarantees",
   "shipping.speed": "24–48h shipping within mainland Spain. Free on orders over €500.",

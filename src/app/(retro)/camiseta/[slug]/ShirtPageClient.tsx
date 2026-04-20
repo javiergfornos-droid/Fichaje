@@ -6,6 +6,7 @@ import ClubShirtBadge from "@/components/retro/ClubShirtBadge";
 import type { MockShirt, MockClub } from "@/lib/mocks/clubs-and-shirts";
 import { getShirtMedia } from "@/lib/utils/shirt-helpers";
 import { useI18n } from "@/contexts/I18nContext";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 
 // ─── Palette (saturated PC Fútbol) ─────────────────────────
 const NAVY = "#1E2A5E";
@@ -71,20 +72,18 @@ function formatEuro(cents: number): string {
   })}`;
 }
 
-function typeLabelEs(t: MockShirt["type"]): string {
-  switch (t) {
-    case "local": return "LOCAL";
-    case "away": return "VISITANTE";
-    case "third": return "TERCERA";
-    case "goalkeeper": return "PORTERO";
-    case "sweatshirt": return "SUDADERA";
-  }
-}
+const TYPE_KEY: Record<MockShirt["type"], TranslationKey> = {
+  local: "shirt.type.local",
+  away: "shirt.type.away",
+  third: "shirt.type.third",
+  goalkeeper: "shirt.type.goalkeeper",
+  sweatshirt: "shirt.type.sweatshirt",
+};
 
-function conditionLabel(v: number): string {
-  if (v >= 85) return "EXCELENTE";
-  if (v >= 70) return "MUY BUENA";
-  return "BUENA";
+function conditionKey(v: number): TranslationKey {
+  if (v >= 85) return "shirt.condition.excellent";
+  if (v >= 70) return "shirt.condition.very_good";
+  return "shirt.condition.good";
 }
 
 // ─── 8-bit pixel sprites (rect-based, no anti-aliasing) ────
@@ -246,7 +245,15 @@ function PixelK({ size = 20, color = RED }: { size?: number; color?: string }) {
 }
 
 // ─── Zoom dialog (Win95 window style) ──────────────────────
-function ZoomDialog({ onClose }: { onClose: () => void }) {
+function ZoomDialog({
+  onClose,
+  titleText,
+  emptyText,
+}: {
+  onClose: () => void;
+  titleText: string;
+  emptyText: string;
+}) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -259,7 +266,7 @@ function ZoomDialog({ onClose }: { onClose: () => void }) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Visualizando imagen"
+      aria-label={titleText}
       onClick={onClose}
       style={{
         position: "fixed",
@@ -299,7 +306,7 @@ function ZoomDialog({ onClose }: { onClose: () => void }) {
               letterSpacing: 1,
             }}
           >
-            VISUALIZANDO IMAGEN
+            {titleText}
           </span>
           <button
             type="button"
@@ -347,7 +354,7 @@ function ZoomDialog({ onClose }: { onClose: () => void }) {
               letterSpacing: 2,
             }}
           >
-            SIN FOTO DISPONIBLE
+            {emptyText}
           </div>
         </div>
       </div>
@@ -682,7 +689,7 @@ export default function ShirtPageClient({
     if (offerCents < minOffer) {
       setShake(true);
       setTimeout(() => setShake(false), 400);
-      console.log("DIRECTOR DEPORTIVO: ESA OFERTA NO HAY POR DÓNDE COGERLA");
+      console.log(t("shirt.offer.director_message"));
       return;
     }
     console.log("Oferta enviada:", offerCents);
@@ -698,15 +705,14 @@ export default function ShirtPageClient({
     console.log("Wishlist: " + shirt.slug);
   };
 
-  const clubName = club?.name ?? "Club desconocido";
-  const title = `${club?.short_name ?? clubName} ${shirt.season}`.toUpperCase();
-  // Longer display title for Bloque 1: club + season + (banana-like suffix if present)
-  const fullTitle = `${clubName} ${shirt.season} ${shirt.brand}`.toUpperCase();
+  const clubName = club?.name ?? "Club";
+  const typeLabel = t(TYPE_KEY[shirt.type]);
+  // Bloque 1 title: club + season + TYPE + brand
+  const fullTitle = `${clubName} ${shirt.season} ${typeLabel} ${shirt.brand}`.toUpperCase();
   const breadcrumb = [
-    "INICIO",
-    "CAMISETAS",
+    t("shirt.breadcrumb.home"),
+    t("shirt.breadcrumb.shirts"),
     (club?.name ?? "").toUpperCase(),
-    title,
   ]
     .filter(Boolean)
     .join(" > ");
@@ -715,10 +721,6 @@ export default function ShirtPageClient({
 
   const hasKitlegit = Boolean(shirt.kitlegit_url);
   const trustCount = 3 + (hasKitlegit ? 1 : 0);
-
-  const descLabel = locale === "en" ? "DESCRIPTION" : "DESCRIPCIÓN";
-  const seasonLabel = locale === "en" ? "ABOUT THE SEASON" : "SOBRE LA TEMPORADA";
-  const historyLabel = locale === "en" ? "CLUB HISTORY" : "HISTORIAL DEL CLUB";
 
   return (
     <div
@@ -763,7 +765,7 @@ export default function ShirtPageClient({
                 <rect x={2} y={7} width={2} height={2} />
               </g>
             </svg>
-            {locale === "en" ? "BACK TO MAP" : "VOLVER AL MAPA"}
+            {t("shirt.back_to_map")}
           </Link>
         </div>
 
@@ -879,7 +881,7 @@ export default function ShirtPageClient({
                     padding: 12,
                   }}
                 >
-                  SIN FOTO DISPONIBLE
+                  {t("shirt.photos.no_photo")}
                 </div>
               )}
               {/* Scanlines overlay */}
@@ -965,7 +967,7 @@ export default function ShirtPageClient({
                 textAlign: "center",
               }}
             >
-              FOTOS DE LA PIEZA · {activePhoto + 1} / {slotCount}
+              {t("shirt.photos.label")} · {activePhoto + 1} / {slotCount}
             </p>
           </div>
 
@@ -1005,7 +1007,7 @@ export default function ShirtPageClient({
                   textTransform: "uppercase",
                 }}
               >
-                INFORMACIÓN DE LA CAMISETA
+                {t("shirt.labels.info")}
               </span>
             </div>
 
@@ -1018,18 +1020,34 @@ export default function ShirtPageClient({
                 gap: 8,
               }}
             >
-              <AttributeBox label="AÑO" value={String(shirt.year)} bg={BOX_YEAR} />
-              <AttributeBox label="TIPO" value={typeLabelEs(shirt.type)} bg={BOX_TYPE} />
-              <AttributeBox label="TALLA" value={shirt.size} bg={BOX_SIZE} />
-              <AttributeBox label="MARCA" value={shirt.brand.toUpperCase()} bg={BOX_BRAND} />
               <AttributeBox
-                label="COMPETICIÓN"
-                value={(shirt.competition ?? "PREMIER LEAGUE").toUpperCase()}
+                label={t("shirt.attributes.year")}
+                value={String(shirt.year)}
+                bg={BOX_YEAR}
+              />
+              <AttributeBox
+                label={t("shirt.attributes.type")}
+                value={typeLabel}
+                bg={BOX_TYPE}
+              />
+              <AttributeBox
+                label={t("shirt.attributes.size")}
+                value={shirt.size}
+                bg={BOX_SIZE}
+              />
+              <AttributeBox
+                label={t("shirt.attributes.brand")}
+                value={shirt.brand.toUpperCase()}
+                bg={BOX_BRAND}
+              />
+              <AttributeBox
+                label={t("shirt.attributes.competition")}
+                value={(shirt.competition ?? "Premier League").toUpperCase()}
                 bg={BOX_COMP}
               />
               <AttributeBox
-                label="CONDICIÓN"
-                value={conditionLabel(shirt.stat_condition)}
+                label={t("shirt.attributes.condition_label")}
+                value={t(conditionKey(shirt.stat_condition))}
                 bg={BOX_COND}
               />
             </div>
@@ -1081,13 +1099,17 @@ export default function ShirtPageClient({
                 }}
               >
                 {shirt.match_worn && (
-                  <StatusBadge label="MATCH WORN" bg={RED} fg={CREAM} />
+                  <StatusBadge label={t("shirt.badges.match_worn")} bg={RED} fg={CREAM} />
                 )}
                 {shirt.kitlegit_url && (
-                  <StatusBadge label="CERTIFICADO KITLEGIT" bg={GOLD} fg={BLACK} />
+                  <StatusBadge
+                    label={t("shirt.badges.kitlegit_certified")}
+                    bg={GOLD}
+                    fg={BLACK}
+                  />
                 )}
                 {!shirt.match_worn && !shirt.kitlegit_url && (
-                  <StatusBadge label="PIEZA ÚNICA" bg="#50A030" fg={CREAM} />
+                  <StatusBadge label={t("shirt.badges.unique_piece")} bg="#50A030" fg={CREAM} />
                 )}
               </div>
             </div>
@@ -1116,12 +1138,12 @@ export default function ShirtPageClient({
                     marginBottom: 8,
                   }}
                 >
-                  STATS
+                  {t("shirt.stats.title")}
                 </h2>
-                <StatRow label="CONDICIÓN" value={shirt.stat_condition} />
-                <StatRow label="COLOR" value={shirt.stat_color} />
-                <StatRow label="INTEGRIDAD" value={shirt.stat_integrity} />
-                <StatRow label="ICONICIDAD" value={shirt.stat_iconicity} />
+                <StatRow label={t("shirt.stats.condition")} value={shirt.stat_condition} />
+                <StatRow label={t("shirt.stats.color")} value={shirt.stat_color} />
+                <StatRow label={t("shirt.stats.integrity")} value={shirt.stat_integrity} />
+                <StatRow label={t("shirt.stats.iconicity")} value={shirt.stat_iconicity} />
                 <div style={{ borderTop: "2px solid #2A2A2A", marginTop: 8 }} />
               </div>
 
@@ -1164,7 +1186,7 @@ export default function ShirtPageClient({
                     letterSpacing: 1,
                   }}
                 >
-                  MEDIA
+                  {t("shirt.stats.avg")}
                 </span>
               </div>
             </div>
@@ -1204,7 +1226,7 @@ export default function ShirtPageClient({
                     letterSpacing: 1,
                   }}
                 >
-                  IVA INCLUIDO · PIEZA ÚNICA
+                  {t("shirt.price.vat_included")} · {t("shirt.badges.unique_piece")}
                 </div>
               </div>
 
@@ -1256,7 +1278,7 @@ export default function ShirtPageClient({
                     textTransform: "uppercase",
                   }}
                 >
-                  OFERTA
+                  {t("shirt.offer.label")}
                 </span>
               </div>
 
@@ -1264,7 +1286,7 @@ export default function ShirtPageClient({
                 className={shake ? "animate-shake" : ""}
                 style={{ display: "flex", flexDirection: "column", gap: 6 }}
               >
-                <OfferRow label="TU OFERTA" bg={OFFER_RED}>
+                <OfferRow label={t("shirt.offer.your_offer")} bg={OFFER_RED}>
                   <button
                     type="button"
                     onClick={() => adjustOffer(-1000)}
@@ -1316,7 +1338,7 @@ export default function ShirtPageClient({
                   </button>
                 </OfferRow>
 
-                <OfferRow label="PRECIO DE LISTA" bg={OFFER_ORANGE}>
+                <OfferRow label={t("shirt.offer.list_price")} bg={OFFER_ORANGE}>
                   <span
                     style={{
                       fontFamily: "var(--font-vt323), monospace",
@@ -1329,7 +1351,7 @@ export default function ShirtPageClient({
                   </span>
                 </OfferRow>
 
-                <OfferRow label="ENVÍO APROX." bg={OFFER_BLUE}>
+                <OfferRow label={t("shirt.offer.shipping_approx")} bg={OFFER_BLUE}>
                   <span
                     style={{
                       fontFamily: "var(--font-vt323), monospace",
@@ -1338,7 +1360,7 @@ export default function ShirtPageClient({
                       paddingRight: 6,
                     }}
                   >
-                    €15,00 · ESPAÑA
+                    €15,00 · {t("shirt.offer.spain")}
                   </span>
                 </OfferRow>
               </div>
@@ -1378,10 +1400,24 @@ export default function ShirtPageClient({
                 gap: 8,
               }}
             >
-              <TrustBadge icon={<PixelTruck color={GOLD} />} label="ENVÍO 24-48H" />
-              <TrustBadge icon={<PixelReturn color="#50A030" />} label="DEVOL. 14 DÍAS" />
-              <TrustBadge icon={<PixelShield color="#3A5EA0" />} label="AUTENTICIDAD" />
-              {hasKitlegit && <TrustBadge icon={<PixelK color={RED} />} label="KITLEGIT" />}
+              <TrustBadge
+                icon={<PixelTruck color={GOLD} />}
+                label={t("shirt.trust.shipping")}
+              />
+              <TrustBadge
+                icon={<PixelReturn color="#50A030" />}
+                label={t("shirt.trust.returns")}
+              />
+              <TrustBadge
+                icon={<PixelShield color="#3A5EA0" />}
+                label={t("shirt.trust.authenticity")}
+              />
+              {hasKitlegit && (
+                <TrustBadge
+                  icon={<PixelK color={RED} />}
+                  label={t("shirt.trust.kitlegit")}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1392,7 +1428,7 @@ export default function ShirtPageClient({
         <div style={{ background: "#B8B8B8", padding: "20px 0 0 0", marginTop: 0 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <Accordion
-              title={descLabel}
+              title={t("shirt.accordion.description")}
               isOpen={openAcc.has("desc")}
               onToggle={() => toggleAcc("desc")}
             >
@@ -1404,33 +1440,35 @@ export default function ShirtPageClient({
             </Accordion>
 
             <Accordion
-              title={seasonLabel}
+              title={t("shirt.accordion.about_season")}
               isOpen={openAcc.has("season")}
               onToggle={() => toggleAcc("season")}
             >
               <p style={{ margin: 0 }}>
-                {locale === "en"
-                  ? `This piece corresponds to the ${shirt.season} season. Detailed information about this season will be available soon.`
-                  : `Esta pieza corresponde a la temporada ${shirt.season}. La información detallada sobre esta temporada estará disponible próximamente.`}
+                {t("shirt.accordion.about_season_body", { season: shirt.season })}
               </p>
             </Accordion>
 
             <Accordion
-              title={historyLabel}
+              title={t("shirt.accordion.club_history")}
               isOpen={openAcc.has("history")}
               onToggle={() => toggleAcc("history")}
             >
               <p style={{ margin: 0 }}>
-                {locale === "en"
-                  ? `Club history and honours during ${clubName}'s ${shirt.season} era coming soon.`
-                  : `Próximamente incluiremos información sobre el palmarés y hitos del ${clubName} durante esta época.`}
+                {t("shirt.accordion.club_history_body", { club: clubName })}
               </p>
             </Accordion>
           </div>
         </div>
       </div>
 
-      {zoomOpen && <ZoomDialog onClose={() => setZoomOpen(false)} />}
+      {zoomOpen && (
+        <ZoomDialog
+          onClose={() => setZoomOpen(false)}
+          titleText={t("shirt.photos.viewing")}
+          emptyText={t("shirt.photos.no_photo")}
+        />
+      )}
       {/* Hidden suppressor for unused country var — kept for future breadcrumb expansion */}
       <span style={{ display: "none" }} aria-hidden>{countryName}</span>
     </div>
@@ -1497,6 +1535,7 @@ function CtaBody({
   label,
   hint,
   labelSize,
+  hintSize = 12,
   labelColor,
   hintColor,
 }: {
@@ -1504,6 +1543,7 @@ function CtaBody({
   label: string;
   hint: string;
   labelSize: number;
+  hintSize?: number;
   labelColor: string;
   hintColor: string;
 }) {
@@ -1547,7 +1587,7 @@ function CtaBody({
         <span
           style={{
             fontFamily: "var(--font-vt323), monospace",
-            fontSize: 12,
+            fontSize: hintSize,
             color: labelColor,
             opacity: 0.75,
             letterSpacing: 0.5,
@@ -1579,6 +1619,7 @@ function GoldCta({
   onClick,
   height,
   labelSize,
+  hintSize = 12,
   width = "100%",
   flashing = false,
 }: {
@@ -1588,6 +1629,7 @@ function GoldCta({
   onClick: () => void;
   height: number;
   labelSize: number;
+  hintSize?: number;
   width?: number | string;
   flashing?: boolean;
 }) {
@@ -1633,6 +1675,7 @@ function GoldCta({
         label={label}
         hint={hint}
         labelSize={labelSize}
+        hintSize={hintSize}
         labelColor="#1A1A1A"
         hintColor="#1A1A1A"
       />
@@ -1648,6 +1691,7 @@ function GhostCta({
   onClick,
   height,
   labelSize,
+  hintSize = 11,
 }: {
   label: string;
   hint: string;
@@ -1655,6 +1699,7 @@ function GhostCta({
   onClick: () => void;
   height: number;
   labelSize: number;
+  hintSize?: number;
 }) {
   return (
     <button
@@ -1688,6 +1733,7 @@ function GhostCta({
         label={label}
         hint={hint}
         labelSize={labelSize}
+        hintSize={hintSize}
         labelColor="#E8DCC8"
         hintColor="#E8DCC8"
       />
