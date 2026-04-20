@@ -42,11 +42,15 @@ export interface MockShirt {
   type: ShirtType;
   brand: string;
   size: ShirtSize;
+  competition?: string;
   price_cents: number;
+  min_offer_pct: number;
   stat_condition: number;
   stat_color: number;
   stat_integrity: number;
   stat_iconicity: number;
+  match_worn?: boolean;
+  kitlegit_url?: string | null;
   description_es: string;
   description_en: string;
   photos: string[];
@@ -200,6 +204,7 @@ function generateShirts(): MockShirt[] {
         brand,
         size,
         price_cents,
+        min_offer_pct: 80,
         stat_condition,
         stat_color,
         stat_integrity,
@@ -213,7 +218,35 @@ function generateShirts(): MockShirt[] {
   return all;
 }
 
-export const SHIRTS: MockShirt[] = generateShirts();
+/** Hand-curated featured shirts — override/append to the generated set. */
+const FEATURED_SHIRTS: MockShirt[] = [
+  {
+    id: "shirt-arsenal-bruised-banana",
+    slug: "1991-93-arsenal-away-bruised-banana",
+    club_id: "arsenal-fc",
+    year: 1991,
+    season: "1991-1993",
+    type: "away",
+    brand: "Adidas",
+    size: "L",
+    competition: "Premier League",
+    price_cents: 45000,
+    min_offer_pct: 75,
+    stat_condition: 88,
+    stat_color: 85,
+    stat_integrity: 90,
+    stat_iconicity: 92,
+    match_worn: false,
+    kitlegit_url: null,
+    description_es:
+      "Una de las camisetas más icónicas de los 90. El patrón 'bruised banana' diseñado por Adidas se convirtió en símbolo de la era pre-Wenger del Arsenal. Camiseta visitante utilizada entre 1991 y 1993.",
+    description_en:
+      "One of the most iconic shirts of the 90s. Adidas's 'bruised banana' pattern became a symbol of the pre-Wenger Arsenal era. Away shirt used between 1991 and 1993.",
+    photos: [],
+  },
+];
+
+export const SHIRTS: MockShirt[] = [...generateShirts(), ...FEATURED_SHIRTS];
 
 export function getClubById(id: string): MockClub | undefined {
   return CLUBS.find((c) => c.id === id);

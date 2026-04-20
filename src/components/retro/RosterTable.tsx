@@ -46,7 +46,7 @@ export default function RosterTable({ club, shirts, countryFlag, countryName }: 
       {shirts.map((shirt, i) => (
         <Link
           key={shirt.id}
-          href={`/shirt/${shirt.slug}`}
+          href={`/camiseta/${shirt.slug}`}
           className={`grid grid-cols-[40px_1fr_80px_60px_100px_90px_40px] items-center px-2 py-2 no-underline hover:bg-[#E8F0FF] transition-colors ${
             i % 2 === 0 ? "bg-[#F8F8F8]" : "bg-[#EEEEEE]"
           }`}

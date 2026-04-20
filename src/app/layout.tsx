@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Oswald, Source_Serif_4, JetBrains_Mono, Press_Start_2P, VT323 } from "next/font/google";
+import { Oswald, Source_Serif_4, JetBrains_Mono, Press_Start_2P, VT323, Bebas_Neue } from "next/font/google";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
@@ -45,6 +45,13 @@ const vt323 = VT323({
   display: "swap",
 });
 
+const bebasNeue = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bebas-neue",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "¡FICHAJE! — Camisetas de fútbol vintage originales",
   description:
@@ -63,7 +70,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${oswald.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} ${vt323.variable}`}
+      className={`${oswald.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} ${vt323.variable} ${bebasNeue.variable}`}
     >
       <body className="antialiased bg-[#0A0A0A] text-[#F5F0E8] min-h-screen">
         <I18nProvider>
