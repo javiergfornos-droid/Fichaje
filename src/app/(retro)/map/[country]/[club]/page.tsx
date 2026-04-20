@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import ClubShirtBadge from "@/components/retro/ClubShirtBadge";
+import ContextualBackButton from "@/components/retro/ContextualBackButton";
+import { DEMO_COUNTRIES } from "@/lib/mocks/countries";
 import {
   getClubById,
   getShirtsByClub,
@@ -107,6 +109,9 @@ export default function ClubRosterPage() {
   // Sort shirts by year desc (newer first)
   const sorted = [...shirts].sort((a, b) => b.year - a.year);
 
+  const countryObj = DEMO_COUNTRIES.find((c) => c.id === country);
+  const countryName = countryObj?.name ?? country.toUpperCase();
+
   return (
     <div
       style={{
@@ -122,15 +127,19 @@ export default function ClubRosterPage() {
       {/* Roster header */}
       <div
         style={{
-          height: 40,
+          minHeight: 40,
           background: "linear-gradient(180deg, #1E2A5E, #0F1A3E)",
           borderBottom: "2px solid #D4A843",
           display: "flex",
           alignItems: "center",
           gap: 10,
-          padding: "0 14px",
+          padding: "6px 14px",
         }}
       >
+        <ContextualBackButton
+          href={`/map/${country}`}
+          label={`VOLVER A ${countryName}`}
+        />
         <ClubShirtBadge club={club} size={24} />
         <span
           style={{

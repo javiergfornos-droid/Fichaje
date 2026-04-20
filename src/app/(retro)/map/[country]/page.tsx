@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import ClubShirtBadge from "@/components/retro/ClubShirtBadge";
+import ContextualBackButton from "@/components/retro/ContextualBackButton";
 import { DEMO_COUNTRIES } from "@/lib/mocks/countries";
 import {
   getClubsByCountry,
@@ -62,6 +63,7 @@ export default function CountryPage() {
           background: "linear-gradient(180deg, #D4C090, #B8A070)",
         }}
       >
+        <ContextualBackButton href="/map" label="VOLVER AL MAPA" />
         <span
           className={`fi fi-${countryObj.iso_code}`}
           style={{
