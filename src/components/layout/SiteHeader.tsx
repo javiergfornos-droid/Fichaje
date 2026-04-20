@@ -28,7 +28,10 @@ export default function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isMapRoute = pathname === "/map" || pathname?.startsWith("/map/");
+  const isMapRoute =
+    pathname === "/map" ||
+    pathname?.startsWith("/map/") ||
+    pathname?.startsWith("/camiseta/");
 
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

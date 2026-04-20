@@ -114,6 +114,16 @@
   animation: tab-pulse 2s ease-in-out infinite;
 }
 
+/* Right-side panels fade + slide in when navigating between nested /map states */
+@keyframes slide-fade-in-right {
+  0% { transform: translateX(40px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-fade-in-right {
+  animation: slide-fade-in-right 0.25s ease-out 0.05s both;
+}
+
 /* Shake animation for rejected offers */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
