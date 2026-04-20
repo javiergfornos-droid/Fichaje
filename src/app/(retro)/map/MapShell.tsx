@@ -258,7 +258,7 @@ export default function MapShell({ children }: MapShellProps) {
             style={{
               width: mapLeftWidth,
               flexShrink: 0,
-              transition: "width 0.25s ease-in-out",
+              transition: "width 0.16s ease-out",
               display: "flex",
               flexDirection: "column",
               gap: 8,
@@ -270,7 +270,7 @@ export default function MapShell({ children }: MapShellProps) {
               className="relative min-h-0"
               style={{
                 flex: state === "club" ? 6 : 1,
-                transition: "flex 0.25s ease-in-out",
+                transition: "flex 0.16s ease-out",
               }}
             >
               <RetroMap
@@ -283,25 +283,41 @@ export default function MapShell({ children }: MapShellProps) {
                 onHoverCountry={setHoveredCountry}
               />
 
-              {/* Date-clock — top-left corner, inside the map frame */}
+              {/* Top-left stack — date-clock + contextual back button */}
               <div
                 style={{
                   position: "absolute",
                   top: 14,
                   left: 14,
                   zIndex: 20,
-                  background: "linear-gradient(180deg, #2A3A54, #1A2A44)",
-                  border: "2px outset #4a5a7a",
-                  padding: "2px 10px",
-                  fontFamily: "var(--font-vt323), monospace",
-                  fontSize: "18px",
-                  lineHeight: 1,
-                  color: "#E8DCC8",
-                  letterSpacing: "1px",
-                  boxShadow: "2px 2px 0 rgba(0,0,0,0.5)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: 12,
                 }}
               >
-                SEP-15 <span style={{ color: "#8A9AAA" }}>|</span> 1996
+                <div
+                  style={{
+                    background: "linear-gradient(180deg, #2A3A54, #1A2A44)",
+                    border: "2px outset #4a5a7a",
+                    padding: "2px 10px",
+                    fontFamily: "var(--font-vt323), monospace",
+                    fontSize: "18px",
+                    lineHeight: 1,
+                    color: "#E8DCC8",
+                    letterSpacing: "1px",
+                    boxShadow: "2px 2px 0 rgba(0,0,0,0.5)",
+                  }}
+                >
+                  SEP-15 <span style={{ color: "#8A9AAA" }}>|</span> 1996
+                </div>
+                {state !== "default" && (
+                  <ContextualBackButton
+                    state={state}
+                    countryId={countryId}
+                    countryName={selectedCountry?.name}
+                  />
+                )}
               </div>
 
               {/* Season tag — top-right corner */}
@@ -711,6 +727,102 @@ function PixelArrow({ color }: { color: string }) {
         <rect x="12" y="7" width="2" height="2" />
       </g>
     </svg>
+  );
+}
+
+/* ────────────────────── Contextual back button (map) ────────────────────── */
+
+function PixelArrowLeft({
+  size = 12,
+  color,
+}: {
+  size?: number;
+  color: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      shapeRendering="crispEdges"
+      aria-hidden
+      style={{
+        flexShrink: 0,
+        filter: "drop-shadow(1px 1px 0 rgba(0,0,0,0.4))",
+      }}
+    >
+      <g fill={color}>
+        <rect x="6" y="6" width="8" height="4" />
+        <rect x="5" y="4" width="2" height="8" />
+        <rect x="4" y="5" width="2" height="6" />
+        <rect x="3" y="6" width="2" height="4" />
+        <rect x="2" y="7" width="2" height="2" />
+      </g>
+    </svg>
+  );
+}
+
+function ContextualBackButton({
+  state,
+  countryId,
+  countryName,
+}: {
+  state: "country" | "club";
+  countryId: string | undefined;
+  countryName: string | undefined;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const href =
+    state === "country" ? "/map" : countryId ? `/map/${countryId}` : "/map";
+  const label =
+    state === "country"
+      ? "VOLVER AL MAPA"
+      : `VOLVER A ${countryName ?? "PAÍS"}`;
+  return (
+    <Link
+      href={href}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setPressed(false);
+      }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        height: 32,
+        padding: "0 16px",
+        borderWidth: 3,
+        borderStyle: pressed ? "inset" : "outset",
+        borderColor: "#4A5A8E",
+        background: "linear-gradient(180deg, #2A3A6E, #1A2A5E)",
+        color: "#F5F0E8",
+        fontFamily: "var(--font-oswald), sans-serif",
+        fontWeight: 700,
+        fontSize: 13,
+        letterSpacing: 1.5,
+        textTransform: "uppercase",
+        textDecoration: "none",
+        transform: pressed
+          ? "translate(0, 1px)"
+          : hovered
+            ? "translate(-1px, 0)"
+            : "translate(0, 0)",
+        filter: hovered ? "brightness(1.15)" : "none",
+        boxShadow: pressed
+          ? "1px 1px 0 rgba(0,0,0,0.35)"
+          : "2px 2px 0 rgba(0,0,0,0.45)",
+        transition: "filter 0.1s, transform 0.1s",
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <PixelArrowLeft size={12} color="#D4A843" />
+      {label}
+    </Link>
   );
 }
 

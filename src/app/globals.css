@@ -121,7 +121,7 @@
 }
 
 .animate-slide-fade-in-right {
-  animation: slide-fade-in-right 0.25s ease-out 0.05s both;
+  animation: slide-fade-in-right 0.14s ease-out both;
 }
 
 /* Shake animation for rejected offers */

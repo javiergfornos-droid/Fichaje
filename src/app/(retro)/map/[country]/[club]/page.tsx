@@ -10,6 +10,7 @@ import {
   type MockShirt,
   type ShirtType,
 } from "@/lib/mocks/clubs-and-shirts";
+import { getShirtMedia } from "@/lib/utils/shirt-helpers";
 
 /** Colored type badge for the roster — maps type → color + short label. */
 const TYPE_BADGE: Record<
@@ -28,16 +29,16 @@ function MeBox({ value }: { value: number }) {
   let bg = "#D4A843"; // gold >= 90
   let fg = "#1A1408";
   if (value < 60) {
-    bg = "#D03030";
+    bg = "#D04040";
     fg = "#FFFFFF";
   } else if (value < 70) {
-    bg = "#E0741A";
+    bg = "#E8802A";
     fg = "#FFFFFF";
   } else if (value < 80) {
-    bg = "#E8C840";
+    bg = "#E8C040";
     fg = "#1A1408";
   } else if (value < 90) {
-    bg = "#40A850";
+    bg = "#50A030";
     fg = "#FFFFFF";
   }
   return (
@@ -301,7 +302,7 @@ function RosterRow({
       >
         {shirt.size}
       </span>
-      <MeBox value={shirt.stat_iconicity} />
+      <MeBox value={getShirtMedia(shirt)} />
       <span
         style={{
           textAlign: "right",

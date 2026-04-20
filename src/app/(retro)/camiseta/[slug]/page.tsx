@@ -1,6 +1,6 @@
 import ShirtPageClient from "./ShirtPageClient";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   getShirtBySlug,
   getClubById,
@@ -144,17 +144,37 @@ export default async function CamisetaPage({
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-24 lg:pb-8 pt-4">
-      {/* Back to map button — top-left */}
+      {/* Back to map button — top-left, prominent */}
       <div className="mb-4">
         <Link
           href={backHref}
-          className="inline-flex items-center gap-2 px-3 py-1.5 font-[family-name:var(--font-oswald)] text-xs font-bold uppercase tracking-widest text-[#E8DCC8] hover:text-[#D4A843] no-underline"
+          className="inline-flex items-center gap-3 px-4 font-[family-name:var(--font-oswald)] text-sm font-bold uppercase tracking-widest text-[#F5F0E8] hover:text-[#D4A843] no-underline"
           style={{
-            border: "2px outset #4a5a7a",
-            background: "linear-gradient(180deg, #2A3A54, #1A2A44)",
+            height: 40,
+            borderWidth: 3,
+            borderStyle: "outset",
+            borderColor: "#4A5A8E",
+            background: "linear-gradient(180deg, #2A3A6E, #1A2A5E)",
+            boxShadow: "2px 2px 0 rgba(0,0,0,0.45)",
+            letterSpacing: "1.5px",
           }}
         >
-          <ChevronLeft className="w-4 h-4" aria-hidden />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            shapeRendering="crispEdges"
+            aria-hidden
+            style={{ flexShrink: 0 }}
+          >
+            <g fill="#D4A843">
+              <rect x="6" y="6" width="8" height="4" />
+              <rect x="5" y="4" width="2" height="8" />
+              <rect x="4" y="5" width="2" height="6" />
+              <rect x="3" y="6" width="2" height="4" />
+              <rect x="2" y="7" width="2" height="2" />
+            </g>
+          </svg>
           Volver al mapa
         </Link>
       </div>
