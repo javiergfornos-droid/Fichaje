@@ -17,18 +17,34 @@ const RED = "#C82828";
 const BLACK = "#0A0A0A";
 const BG_GREY = "#D0D0D0";
 
-// Attribute box colors
-const BOX_YEAR = "#A8C848";
-const BOX_TYPE = "#D8A878";
-const BOX_SIZE = "#A8C0E0";
-const BOX_BRAND = "#B8A0D0";
-const BOX_COMP = "#D0D0D0";
-const BOX_COND = "#E0B8B8";
+// Attribute box colors — unified blue family (celeste)
+const BOX_YEAR = "#B8D0E8";
+const BOX_TYPE = "#A8C8E0";
+const BOX_SIZE = "#98C0D8";
+const BOX_BRAND = "#B0D8E8";
+const BOX_COMP = "#C0D8E8";
+const BOX_COND = "#A0C8E0";
 
 // Offer row colors
 const OFFER_RED = "#D82020";
-const OFFER_ORANGE = "#E8802A";
-const OFFER_BLUE = "#3A5EA0";
+
+// Per-club background color for the "club bar" (SUB 4.3 left half).
+// Muted tones of each club's primary color; gradient fades into #1A1A1A.
+const CLUB_BG_COLOR: Record<string, string> = {
+  "arsenal-fc": "#3A1818",
+  "fc-barcelona": "#0F2538",
+  "real-madrid": "#2A2A3A",
+  "ac-milan": "#3A0A0A",
+  "juventus": "#1A1A1A",
+  "manchester-united": "#3A0A0A",
+  "liverpool-fc": "#380A10",
+  "chelsea-fc": "#0A1A3A",
+  "newcastle-united": "#1A1A1A",
+  "boca-juniors": "#0A1F3E",
+  "river-plate": "#2A2A2A",
+  "flamengo": "#2A0A0A",
+};
+const CLUB_BG_FALLBACK = "#2A2A2A";
 
 // ─── Small helpers ─────────────────────────────────────────
 const OUTSET = (w = 2) => `${w}px outset`;
@@ -375,26 +391,26 @@ function AttributeBox({
   return (
     <div
       style={{
-        height: 64,
+        height: 54,
         background: bg,
         ...bevelOutset(2),
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "4px 6px",
+        padding: "6px 6px 8px 6px",
         boxShadow: "2px 2px 0 rgba(0,0,0,0.3)",
       }}
     >
       <span
         style={{
           fontFamily: "var(--font-press-start), monospace",
-          fontSize: 9,
-          color: BLACK,
+          fontSize: 10,
+          color: "#1a1a1a",
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: 1,
-          lineHeight: 1.2,
+          lineHeight: 1,
         }}
       >
         {label}
@@ -402,11 +418,12 @@ function AttributeBox({
       <span
         style={{
           fontFamily: "var(--font-bebas-neue), sans-serif",
-          fontSize: 22,
-          color: BLACK,
+          fontSize: 26,
+          color: "#1a1a1a",
           fontWeight: 700,
-          letterSpacing: 1,
-          lineHeight: 1.1,
+          textTransform: "uppercase",
+          letterSpacing: 1.5,
+          lineHeight: 1,
           marginTop: 2,
         }}
       >
@@ -480,48 +497,6 @@ function StatRow({ label, value }: { label: string; value: number }) {
       >
         {value}
       </span>
-    </div>
-  );
-}
-
-// ─── Offer row (SUB-BLOQUE 4.6) ────────────────────────────
-function OfferRow({
-  label,
-  bg,
-  children,
-}: {
-  label: string;
-  bg: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      style={{
-        height: 48,
-        background: bg,
-        ...bevelOutset(2),
-        display: "flex",
-        alignItems: "center",
-        padding: "0 10px 0 14px",
-        gap: 10,
-        boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "var(--font-press-start), monospace",
-          fontSize: 11,
-          color: CREAM,
-          fontWeight: 700,
-          letterSpacing: 1,
-          flexShrink: 0,
-        }}
-      >
-        {label}
-      </span>
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-        {children}
-      </div>
     </div>
   );
 }
@@ -1016,7 +991,7 @@ export default function ShirtPageClient({
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                gridTemplateRows: "64px 64px 64px",
+                gridTemplateRows: "54px 54px 54px",
                 gap: 8,
               }}
             >
@@ -1064,7 +1039,9 @@ export default function ShirtPageClient({
               <div
                 style={{
                   height: 48,
-                  background: "#2A2A2A",
+                  background: `linear-gradient(135deg, ${
+                    (club && CLUB_BG_COLOR[club.id]) || CLUB_BG_FALLBACK
+                  } 0%, #1A1A1A 100%)`,
                   ...bevelOutset(2),
                   display: "flex",
                   alignItems: "center",
@@ -1235,8 +1212,8 @@ export default function ShirtPageClient({
                 hint={t("shirt.cta.buy_now_hint")}
                 icon={<PixelCoinEuro size={24} color="#1A1A1A" />}
                 onClick={onBuyClick}
-                height={64}
-                labelSize={22}
+                height={72}
+                labelSize={18}
                 width={200}
                 flashing={flash}
               />
@@ -1286,83 +1263,97 @@ export default function ShirtPageClient({
                 className={shake ? "animate-shake" : ""}
                 style={{ display: "flex", flexDirection: "column", gap: 6 }}
               >
-                <OfferRow label={t("shirt.offer.your_offer")} bg={OFFER_RED}>
-                  <button
-                    type="button"
-                    onClick={() => adjustOffer(-1000)}
-                    aria-label="Reducir 10€"
-                    style={arrowBtnStyle}
+                <div
+                  style={{
+                    height: 72,
+                    background: OFFER_RED,
+                    ...bevelOutset(2),
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0 12px 0 16px",
+                    gap: 12,
+                    boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "var(--font-press-start), monospace",
+                      fontSize: 11,
+                      color: CREAM,
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                      flexShrink: 0,
+                    }}
                   >
-                    ◄
-                  </button>
+                    {t("shirt.offer.your_offer")}
+                  </span>
                   <div
                     style={{
-                      width: 120,
-                      height: 30,
-                      background: "#0A0A0A",
-                      ...bevelInset(2),
+                      marginLeft: "auto",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      gap: 8,
                     }}
                   >
-                    <input
-                      type="number"
-                      min={0}
-                      value={Math.round(offerCents / 100)}
-                      onChange={(e) => {
-                        const v = Math.max(0, Number(e.target.value) || 0);
-                        setOfferCents(v * 100);
-                      }}
+                    <button
+                      type="button"
+                      onClick={() => adjustOffer(-1000)}
+                      aria-label="-10€"
+                      style={bigArrowBtnStyle}
+                    >
+                      ◄
+                    </button>
+                    <div
                       style={{
-                        width: "100%",
-                        height: "100%",
-                        background: "transparent",
-                        border: 0,
-                        outline: "none",
-                        textAlign: "center",
-                        fontFamily: "var(--font-vt323), monospace",
-                        fontSize: 20,
-                        color: GOLD,
-                        letterSpacing: 1,
+                        width: 160,
+                        height: 48,
+                        background: "#0A0A0A",
+                        ...bevelInset(2),
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
-                    />
+                    >
+                      <input
+                        type="number"
+                        min={0}
+                        value={Math.round(offerCents / 100)}
+                        onChange={(e) => {
+                          const v = Math.max(0, Number(e.target.value) || 0);
+                          setOfferCents(v * 100);
+                        }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          background: "transparent",
+                          border: 0,
+                          outline: "none",
+                          textAlign: "center",
+                          fontFamily: "var(--font-vt323), monospace",
+                          fontSize: 28,
+                          color: GOLD,
+                          letterSpacing: 1,
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => adjustOffer(1000)}
+                      aria-label="+10€"
+                      style={bigArrowBtnStyle}
+                    >
+                      ►
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onSubmitOffer}
+                      aria-label="OK"
+                      style={okBtnStyle}
+                    >
+                      OK
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => adjustOffer(1000)}
-                    aria-label="Aumentar 10€"
-                    style={arrowBtnStyle}
-                  >
-                    ►
-                  </button>
-                </OfferRow>
-
-                <OfferRow label={t("shirt.offer.list_price")} bg={OFFER_ORANGE}>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-vt323), monospace",
-                      fontSize: 20,
-                      color: CREAM,
-                      paddingRight: 6,
-                    }}
-                  >
-                    {formatEuro(price)}
-                  </span>
-                </OfferRow>
-
-                <OfferRow label={t("shirt.offer.shipping_approx")} bg={OFFER_BLUE}>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-vt323), monospace",
-                      fontSize: 18,
-                      color: CREAM,
-                      paddingRight: 6,
-                    }}
-                  >
-                    €15,00 · {t("shirt.offer.spain")}
-                  </span>
-                </OfferRow>
+                </div>
               </div>
 
               {/* HACER OFERTA — primary CTA inside OFERTA panel */}
@@ -1373,7 +1364,7 @@ export default function ShirtPageClient({
                   icon={<PixelOfferPaper size={28} color="#1A1A1A" />}
                   onClick={onSubmitOffer}
                   height={72}
-                  labelSize={26}
+                  labelSize={22}
                   width="100%"
                 />
               </div>
@@ -1381,13 +1372,14 @@ export default function ShirtPageClient({
 
             {/* SUB 4.7 — MANDAR UN OJEADOR (wishlist, tertiary) */}
             <div style={{ marginTop: 12 }}>
-              <GhostCta
+              <GoldCta
                 label={t("shirt.cta.wishlist")}
                 hint={t("shirt.cta.wishlist_hint")}
-                icon={<PixelBinoculars size={20} color={GOLD} />}
+                icon={<PixelBinoculars size={20} color="#1A1A1A" />}
                 onClick={onWishlistClick}
-                height={56}
-                labelSize={18}
+                height={72}
+                labelSize={16}
+                muted
               />
             </div>
 
@@ -1402,7 +1394,7 @@ export default function ShirtPageClient({
             >
               <TrustBadge
                 icon={<PixelTruck color={GOLD} />}
-                label={t("shirt.trust.shipping")}
+                label={t("shirt.trust.shipping_with_cost")}
               />
               <TrustBadge
                 icon={<PixelReturn color="#50A030" />}
@@ -1508,9 +1500,9 @@ function StatusBadge({
   );
 }
 
-const arrowBtnStyle: React.CSSProperties = {
-  width: 28,
-  height: 30,
+const bigArrowBtnStyle: React.CSSProperties = {
+  width: 48,
+  height: 48,
   background: "linear-gradient(180deg, #D8D8D8, #A8A8A8)",
   borderWidth: 2,
   borderStyle: "solid",
@@ -1520,11 +1512,31 @@ const arrowBtnStyle: React.CSSProperties = {
   borderBottomColor: "#606060",
   cursor: "pointer",
   fontFamily: "var(--font-press-start), monospace",
-  fontSize: 10,
+  fontSize: 14,
   color: BLACK,
   fontWeight: 700,
   lineHeight: 1,
   padding: 0,
+};
+
+const okBtnStyle: React.CSSProperties = {
+  minWidth: 56,
+  height: 48,
+  padding: "0 10px",
+  background: "linear-gradient(180deg, #E8C840, #C4A030)",
+  borderWidth: 2,
+  borderStyle: "solid",
+  borderTopColor: "#F8E880",
+  borderLeftColor: "#F8E880",
+  borderRightColor: "#907020",
+  borderBottomColor: "#907020",
+  cursor: "pointer",
+  fontFamily: "var(--font-press-start), monospace",
+  fontSize: 12,
+  color: "#1A1A1A",
+  fontWeight: 700,
+  letterSpacing: 1,
+  lineHeight: 1,
 };
 
 // ─── CTA buttons (label + hint + pixel icon) ───────────────
@@ -1611,7 +1623,7 @@ function CtaBody({
   );
 }
 
-/** Gold gradient primary CTA — PAGAR TRASPASO / HACER OFERTA. */
+/** Gold gradient CTA — intenso (default) or apagado (muted). */
 function GoldCta({
   label,
   hint,
@@ -1622,6 +1634,7 @@ function GoldCta({
   hintSize = 12,
   width = "100%",
   flashing = false,
+  muted = false,
 }: {
   label: string;
   hint: string;
@@ -1632,7 +1645,15 @@ function GoldCta({
   hintSize?: number;
   width?: number | string;
   flashing?: boolean;
+  muted?: boolean;
 }) {
+  const gradTop = muted ? "#C8A838" : "#E8C840";
+  const gradBot = muted ? "#907020" : "#C4A030";
+  const borderLight = muted ? "#E8D070" : "#F8E880";
+  const borderDark = muted ? "#604814" : "#907020";
+  const defaultGrad = `linear-gradient(180deg, ${gradTop}, ${gradBot})`;
+  const activeGrad = `linear-gradient(0deg, ${gradTop}, ${gradBot})`;
+
   return (
     <button
       type="button"
@@ -1641,13 +1662,13 @@ function GoldCta({
       style={{
         height,
         width,
-        background: "linear-gradient(180deg, #E8C840, #C4A030)",
+        background: defaultGrad,
         borderWidth: 3,
         borderStyle: "solid",
-        borderTopColor: "#F8E880",
-        borderLeftColor: "#F8E880",
-        borderRightColor: "#907020",
-        borderBottomColor: "#907020",
+        borderTopColor: borderLight,
+        borderLeftColor: borderLight,
+        borderRightColor: borderDark,
+        borderBottomColor: borderDark,
         cursor: "pointer",
         color: "#1A1A1A",
         padding: 0,
@@ -1658,16 +1679,13 @@ function GoldCta({
         flexShrink: 0,
       }}
       onMouseDown={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background =
-          "linear-gradient(0deg, #E8C840, #C4A030)";
+        (e.currentTarget as HTMLButtonElement).style.background = activeGrad;
       }}
       onMouseUp={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background =
-          "linear-gradient(180deg, #E8C840, #C4A030)";
+        (e.currentTarget as HTMLButtonElement).style.background = defaultGrad;
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background =
-          "linear-gradient(180deg, #E8C840, #C4A030)";
+        (e.currentTarget as HTMLButtonElement).style.background = defaultGrad;
       }}
     >
       <CtaBody
@@ -1683,60 +1701,3 @@ function GoldCta({
   );
 }
 
-/** Ghost transparent CTA — MANDAR UN OJEADOR. */
-function GhostCta({
-  label,
-  hint,
-  icon,
-  onClick,
-  height,
-  labelSize,
-  hintSize = 11,
-}: {
-  label: string;
-  hint: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-  height: number;
-  labelSize: number;
-  hintSize?: number;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      style={{
-        height,
-        width: "100%",
-        background: "transparent",
-        borderWidth: 2,
-        borderStyle: "solid",
-        borderTopColor: "#A8A8A8",
-        borderLeftColor: "#A8A8A8",
-        borderRightColor: "#606060",
-        borderBottomColor: "#606060",
-        color: "#E8DCC8",
-        cursor: "pointer",
-        padding: 0,
-        transition: "background 100ms",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "#3A3A3A";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-      }}
-    >
-      <CtaBody
-        icon={icon}
-        label={label}
-        hint={hint}
-        labelSize={labelSize}
-        hintSize={hintSize}
-        labelColor="#E8DCC8"
-        hintColor="#E8DCC8"
-      />
-    </button>
-  );
-}

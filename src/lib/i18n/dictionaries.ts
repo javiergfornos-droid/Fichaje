@@ -121,6 +121,7 @@ export type TranslationKey =
   | "shirt.photos.viewing"
   // Shirt — trust badges
   | "shirt.trust.shipping"
+  | "shirt.trust.shipping_with_cost"
   | "shirt.trust.returns"
   | "shirt.trust.authenticity"
   | "shirt.trust.kitlegit"
@@ -355,6 +356,7 @@ const es: Dictionary = {
   "shirt.photos.viewing": "VISUALIZANDO IMAGEN",
 
   "shirt.trust.shipping": "ENVÍO 24-48H",
+  "shirt.trust.shipping_with_cost": "ENVÍO 24-48H · 15€",
   "shirt.trust.returns": "DEVOL. 14 DÍAS",
   "shirt.trust.authenticity": "AUTENTICIDAD",
   "shirt.trust.kitlegit": "KITLEGIT",
@@ -590,6 +592,7 @@ const en: Dictionary = {
   "shirt.photos.viewing": "VIEWING IMAGE",
 
   "shirt.trust.shipping": "SHIPPING 24-48H",
+  "shirt.trust.shipping_with_cost": "SHIPPING 24-48H · 15€",
   "shirt.trust.returns": "RETURNS 14 DAYS",
   "shirt.trust.authenticity": "AUTHENTICITY",
   "shirt.trust.kitlegit": "KITLEGIT",
